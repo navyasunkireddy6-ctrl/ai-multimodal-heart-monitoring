@@ -1,0 +1,73 @@
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Environments & Secrets
+.env
+.env.local
+.env.*.local
+
+# IDEs & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating System
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Android & Gradle
+.gradle/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.cxx/
+*.apk
+*.aab
+
+# Local Datasets & Large Binaries (keep directory structure via .gitkeep)
+data/ecg/*
+!data/ecg/.gitkeep
+data/ppg/*
+!data/ppg/.gitkeep
+
+# Local SQLite databases & temporary logs
+*.db
+*.sqlite
+*.sqlite3
+backend/*.db
+backend/*.sqlite3
+logs/
+*.log
