@@ -1,4 +1,4 @@
-"""ECG machine learning, signal processing, and dataset package."""
+"""ECG machine learning, signal processing, dataset, and simulated playback package."""
 
 from ml.ecg.processor import ECGProcessor, ECGAnalysisResult
 from ml.ecg.dataset import (
@@ -6,6 +6,11 @@ from ml.ecg.dataset import (
     ECGWindow,
     MITBIH_SYMBOL_MAP,
     AAMI_CLASS_MAP,
+)
+from ml.ecg.playback import (
+    PlaybackState,
+    ECGPlaybackFrame,
+    ECGPlaybackEngine,
 )
 
 __all__ = [
@@ -15,4 +20,7 @@ __all__ = [
     "ECGWindow",
     "MITBIH_SYMBOL_MAP",
     "AAMI_CLASS_MAP",
+    "PlaybackState",
+    "ECGPlaybackFrame",
+    "ECGPlaybackEngine",
 ]
