@@ -5,6 +5,7 @@ Run with:
 """
 
 import sys
+from typing import Tuple, Optional
 import numpy as np
 
 # Ensure project root is in python path
@@ -21,6 +22,7 @@ def generate_synthetic_ecg(
     heart_rate_bpm: float = 72.0,
     noise_amplitude: float = 0.05,
     baseline_drift_amplitude: float = 0.3,
+    seed: Optional[int] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Generate a realistic synthetic ECG lead II signal with baseline drift and noise."""
     t = np.linspace(0, duration_sec, int(duration_sec * sampling_rate_hz), endpoint=False)
@@ -44,7 +46,8 @@ def generate_synthetic_ecg(
     # Add baseline wander (respiration / motion ~ 0.25 Hz)
     drift = baseline_drift_amplitude * np.sin(2 * np.pi * 0.25 * t)
     # Add high-frequency noise
-    noise = np.random.normal(0, noise_amplitude, len(t))
+    rng = np.random.default_rng(seed)
+    noise = rng.normal(0, noise_amplitude, len(t))
 
     raw_signal = ecg + drift + noise
     return t, raw_signal

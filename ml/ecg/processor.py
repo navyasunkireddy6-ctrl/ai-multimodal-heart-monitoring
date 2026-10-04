@@ -159,11 +159,26 @@ class ECGProcessor:
         # Remove duplicate peak indices and sort
         unique_peaks = np.unique(aligned_peaks)
 
-        # Secondary refractory enforcement after realignment
+        # Filter out minor peaks (e.g., P-waves or low noise peaks) whose amplitude
+        # is significantly below the prominent QRS complex amplitude distribution
+        if len(unique_peaks) > 2:
+            peak_amps = signal[unique_peaks]
+            q75_amp = np.percentile(peak_amps, 75)
+            if q75_amp > 0:
+                amplitude_mask = peak_amps >= (0.35 * q75_amp)
+                unique_peaks = unique_peaks[amplitude_mask]
+
+        # Secondary refractory enforcement and T-wave discrimination after realignment:
+        # Standard physiological constraint: beats occurring within 360 ms of a large peak
+        # with significantly lower amplitude (< 60%) are classified as T-waves.
         filtered_r_peaks = []
         last_peak = -100000
         for p in unique_peaks:
             if (p - last_peak) >= min_distance:
+                # T-wave refractory check
+                if last_peak >= 0 and (p - last_peak) < int(0.36 * fs):
+                    if signal[p] < 0.60 * signal[last_peak]:
+                        continue  # Skip T-wave candidate
                 filtered_r_peaks.append(p)
                 last_peak = p
 
