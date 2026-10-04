@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECG Simulated Real-Time Playback — Phase 4 Viewer</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(23, 32, 54, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --ecg-green: #10b981;
+            --peak-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --badge-bg: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .header-title h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .mode-badge {
+            background: #1e3a8a;
+            color: #93c5fd;
+            font-size: 0.78rem;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .mode-badge::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #3b82f6;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.8); }
+        }
+
+        .disclaimer-banner {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            backdrop-filter: blur(12px);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .metric-value-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-unit {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .metric-sub {
+            font-size: 0.8rem;
+            margin-top: 6px;
+            color: var(--text-muted);
+        }
+
+        .quality-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .waveform-container {
+            background: #060911;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 18px;
+            position: relative;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+        }
+
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-line {
+            width: 14px;
+            height: 3px;
+            background: var(--ecg-green);
+            border-radius: 2px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--peak-red);
+            border-radius: 50%;
+        }
+
+        canvas {
+            width: 100%;
+            height: 280px;
+            display: block;
+            border-radius: 8px;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 255, 255, 0.03),
+                rgba(255, 255, 255, 0.03) 1px,
+                transparent 1px,
+                transparent 25px
+            ),
+            repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.03),
+                rgba(255, 255, 255, 0.03) 1px,
+                transparent 1px,
+                transparent 25px
+            );
+        }
+
+        .controls-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: #1f293d;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 9px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #2b3955;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        button.primary {
+            background: #2563eb;
+            border-color: #3b82f6;
+        }
+
+        button.primary:hover {
+            background: #1d4ed8;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        select {
+            background: #1f293d;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>Multimodal Cardiac Monitoring — Simulated Real-Time ECG</h1>
+            <div class="mode-badge" id="modeBadge">ECG Dataset / Simulated Real-Time Mode</div>
+        </div>
+        <div class="status-indicator" id="playbackStateTag" style="font-weight: 700; color: #34d399;">
+            ● STATE: PLAYING
+        </div>
+    </header>
+
+    <div class="disclaimer-banner">
+        Research prototype — not intended for medical diagnosis.
+    </div>
+
+    <!-- Live Telemetry Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-label">Heart Rate — ECG</div>
+            <div class="metric-value-row">
+                <span class="metric-value" id="valHr">--</span>
+                <span class="metric-unit">BPM</span>
+            </div>
+            <div class="metric-sub" id="valRr">RR Interval: -- ms</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Signal Quality Index (SQI)</div>
+            <div class="metric-value-row">
+                <span class="metric-value" id="valSqi">--</span>
+            </div>
+            <div class="metric-sub">
+                Rating: <span class="quality-tag" id="valQuality">--</span>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Predicted ECG Rhythm Class</div>
+            <div class="metric-value-row">
+                <span class="metric-value" id="valRhythm" style="font-size: 1.35rem; font-weight: 700; color: #60a5fa;">Loading...</span>
+            </div>
+            <div class="metric-sub" id="valConf">Confidence: --%</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-label">Record & Time Range</div>
+            <div class="metric-value-row">
+                <span class="metric-value" id="valRecord" style="font-size: 1.6rem;">MIT-BIH 100</span>
+            </div>
+            <div class="metric-sub" id="valTime">Window: 0.0s – 5.0s (1.0s step)</div>
+        </div>
+    </div>
+
+    <!-- Live ECG Oscilloscope Waveform -->
+    <div class="waveform-container">
+        <div class="canvas-header">
+            <div><strong>PhysioNet Lead MLII</strong> (Zero-Phase Bandpass Filtered 0.5–40 Hz)</div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-line"></div> ECG Waveform</div>
+                <div class="legend-item"><div class="legend-dot"></div> Detected R-Peaks</div>
+            </div>
+        </div>
+        <canvas id="ecgCanvas" width="1200" height="280"></canvas>
+    </div>
+
+    <!-- Playback Controls -->
+    <div class="controls-bar">
+        <div class="button-group">
+            <button class="primary" id="btnPlayPause" onclick="togglePlayPause()">Pause</button>
+            <button onclick="controlAction('reset')">Reset (0:00)</button>
+            <button onclick="controlAction('step')">Step Window (+1s)</button>
+        </div>
+
+        <div class="speed-control">
+            <label for="speedSelect">Playback Speed:</label>
+            <select id="speedSelect" onchange="changeSpeed(this.value)">
+                <option value="0.5">0.5x</option>
+                <option value="1.0" selected>1.0x (Real-Time)</option>
+                <option value="2.0">2.0x (Fast)</option>
+                <option value="4.0">4.0x (Max)</option>
+            </select>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("ecgCanvas");
+        const ctx = canvas.getContext("2d");
+        let isPlaying = true;
+        let currentSpeed = 1.0;
+        let timer = null;
+
+        function fetchFrame() {
+            fetch('/api/v1/playback/frame')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.filtered_waveform) {
+                        renderFrame(data);
+                    }
+                })
+                .catch(err => console.error("Poll error:", err));
+        }
+
+        function renderFrame(data) {
+            document.getElementById("valHr").textContent = data.heart_rate_bpm ? data.heart_rate_bpm.toFixed(1) : "--";
+            if (data.rr_intervals_ms && data.rr_intervals_ms.length > 0) {
+                const avgRr = data.rr_intervals_ms.reduce((a, b) => a + b, 0) / data.rr_intervals_ms.length;
+                document.getElementById("valRr").textContent = `Mean RR: ${avgRr.toFixed(0)} ms`;
+            }
+            document.getElementById("valSqi").textContent = (data.signal_quality * 100).toFixed(1) + "%";
+            document.getElementById("valQuality").textContent = data.quality_label;
+            document.getElementById("valRhythm").textContent = data.predicted_rhythm_class;
+            document.getElementById("valConf").textContent = `Confidence: ${(data.rhythm_confidence * 100).toFixed(0)}%`;
+            document.getElementById("valTime").textContent = `Window: ${data.playback_time_sec.toFixed(1)}s – ${(data.playback_time_sec + 5.0).toFixed(1)}s`;
+            document.getElementById("playbackStateTag").textContent = `● STATE: ${data.state}`;
+            document.getElementById("playbackStateTag").style.color = data.state === "PLAYING" ? "#34d399" : "#fbbf24";
+
+            // Draw ECG waveform
+            drawWaveform(data.filtered_waveform, data.r_peaks);
+        }
+
+        function drawWaveform(samples, peaks) {
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            if (!samples || samples.length === 0) return;
+
+            // Compute scaling
+            let minVal = -0.5;
+            let maxVal = 1.5;
+            for (let v of samples) {
+                if (v < minVal) minVal = v;
+                if (v > maxVal) maxVal = v;
+            }
+            const range = (maxVal - minVal) || 1.0;
+
+            // Draw zero isoelectric line
+            const zeroY = h - ((0.0 - minVal) / range) * (h * 0.8) - (h * 0.1);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(0, zeroY);
+            ctx.lineTo(w, zeroY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw ECG trace
+            ctx.strokeStyle = "#10b981";
+            ctx.lineWidth = 2.2;
+            ctx.lineJoin = "round";
+            ctx.beginPath();
+
+            const n = samples.length;
+            const stepX = w / (n - 1);
+
+            for (let i = 0; i < n; i++) {
+                const x = i * stepX;
+                const normY = (samples[i] - minVal) / range;
+                const y = h - (normY * (h * 0.8) + (h * 0.1));
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Draw R-peak markers
+            if (peaks && peaks.length > 0) {
+                ctx.fillStyle = "#ef4444";
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 1.5;
+
+                for (let pIdx of peaks) {
+                    if (pIdx >= 0 && pIdx < n) {
+                        const px = pIdx * stepX;
+                        const pNorm = (samples[pIdx] - minVal) / range;
+                        const py = h - (pNorm * (h * 0.8) + (h * 0.1));
+
+                        // Marker circle
+                        ctx.beginPath();
+                        ctx.arc(px, py, 5, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        // Label 'R'
+                        ctx.fillStyle = "#fca5a5";
+                        ctx.font = "bold 11px sans-serif";
+                        ctx.fillText("R", px - 4, py - 9);
+                        ctx.fillStyle = "#ef4444";
+                    }
+                }
+            }
+        }
+
+        function restartLoop() {
+            if (timer) clearInterval(timer);
+            const intervalMs = Math.max(100, 1000 / currentSpeed);
+            timer = setInterval(() => {
+                if (isPlaying) fetchFrame();
+            }, intervalMs);
+        }
+
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById("btnPlayPause");
+            btn.textContent = isPlaying ? "Pause" : "Play";
+            controlAction(isPlaying ? "resume" : "pause");
+        }
+
+        function changeSpeed(val) {
+            currentSpeed = parseFloat(val);
+            controlAction("speed", { speed: currentSpeed });
+            restartLoop();
+        }
+
+        function controlAction(action, payload = {}) {
+            fetch(`/api/v1/playback/control?action=${action}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => fetchFrame());
+        }
+
+        // Initialize on load
+        fetchFrame();
+        restartLoop();
+    </script>
+</body>
+</html>
