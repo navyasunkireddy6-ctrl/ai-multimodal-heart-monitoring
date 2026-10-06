@@ -22,6 +22,8 @@ from backend.models.schemas import (
     SessionListResponse,
     PPGWebSocketFrame,
     PPGWebSocketResponse,
+    MultimodalAnalyzeRequest,
+    MultimodalAnalyzeResponse,
 )
 
 __all__ = [
@@ -46,4 +48,6 @@ __all__ = [
     "SessionListResponse",
     "PPGWebSocketFrame",
     "PPGWebSocketResponse",
+    "MultimodalAnalyzeRequest",
+    "MultimodalAnalyzeResponse",
 ]

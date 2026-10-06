@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multimodal Real-Time Cardiac Monitoring — Phase 9 Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #070a12;
+            --card-bg: rgba(18, 24, 38, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --ecg-color: #10b981;
+            --ppg-color: #06b6d4;
+            --peak-color: #ef4444;
+            --accent-blue: #3b82f6;
+            --badge-bg: #1e293b;
+            --status-good: #10b981;
+            --status-fair: #f59e0b;
+            --status-poor: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 14px;
+        }
+
+        .header-title h1 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge-live {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--status-good);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            background: #1e293b;
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: #334155;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            border-color: #3b82f6;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 14px 16px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .metric-header {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric-value-container {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .metric-value {
+            font-size: 1.85rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-unit {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .metric-footer {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .badge-good { background: rgba(16, 185, 129, 0.2); color: var(--status-good); }
+        .badge-fair { background: rgba(245, 158, 11, 0.2); color: var(--status-fair); }
+        .badge-poor { background: rgba(239, 68, 68, 0.2); color: var(--status-poor); }
+
+        /* Oscilloscopes Area */
+        .oscilloscopes {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .scope-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .scope-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .scope-channel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .dot-ecg { width: 10px; height: 10px; border-radius: 50%; background: var(--ecg-color); }
+        .dot-ppg { width: 10px; height: 10px; border-radius: 50%; background: var(--ppg-color); }
+
+        canvas {
+            width: 100%;
+            height: 190px;
+            background: #040711;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: block;
+        }
+
+        footer {
+            margin-top: auto;
+            border-top: 1px solid var(--card-border);
+            padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1>Multimodal Cardiac Telemetry <span class="badge-live">LIVE SYNCHRONIZED</span></h1>
+        </div>
+        <div class="header-controls">
+            <select id="recordSelect" class="btn" style="background:#1e293b; padding:6px 10px;">
+                <option value="100">PhysioNet MIT-BIH: Record 100</option>
+                <option value="101">PhysioNet MIT-BIH: Record 101</option>
+            </select>
+            <button id="btnPlayPause" class="btn btn-primary" onclick="togglePlayPause()">Pause</button>
+            <button class="btn" onclick="resetPlayback()">Reset</button>
+            <button class="btn" onclick="exportSessionCSV()">Export CSV</button>
+        </div>
+    </header>
+
+    <!-- Top Telemetry Cards -->
+    <div class="metrics-grid">
+        <!-- ECG Heart Rate -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <span>ECG Heart Rate (HR)</span>
+                <span id="ecgQualityBadge" class="status-badge badge-good">GOOD</span>
+            </div>
+            <div class="metric-value-container">
+                <span id="ecgHrVal" class="metric-value" style="color:var(--ecg-color);">75.2</span>
+                <span class="metric-unit">BPM</span>
+            </div>
+            <div class="metric-footer">
+                <span>Rhythm:</span> <strong id="rhythmClassText" style="color:#f3f4f6;">Normal Sinus Rhythm</strong>
+            </div>
+        </div>
+
+        <!-- PPG Pulse Rate -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <span>PPG Pulse Rate (PR)</span>
+                <span id="ppgQualityBadge" class="status-badge badge-good">GOOD</span>
+            </div>
+            <div class="metric-value-container">
+                <span id="ppgPrVal" class="metric-value" style="color:var(--ppg-color);">74.8</span>
+                <span class="metric-unit">BPM</span>
+            </div>
+            <div class="metric-footer">
+                <span>Optical SQI:</span> <strong id="ppgSqiText">0.91</strong>
+            </div>
+        </div>
+
+        <!-- Discrepancy & Agreement -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <span>Rate Discrepancy (Δ)</span>
+                <span id="agreementBadge" class="status-badge badge-good">EXCELLENT</span>
+            </div>
+            <div class="metric-value-container">
+                <span id="discrepancyVal" class="metric-value">0.4</span>
+                <span class="metric-unit">BPM</span>
+            </div>
+            <div class="metric-footer">
+                <span>Relative Error:</span> <strong id="relErrorText">0.5%</strong>
+            </div>
+        </div>
+
+        <!-- Pulse Arrival Time (PAT) -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <span>Pulse Arrival Time</span>
+                <span class="status-badge" style="background:#1e293b; color:#9ca3af;">LATENCY</span>
+            </div>
+            <div class="metric-value-container">
+                <span id="patVal" class="metric-value">224</span>
+                <span class="metric-unit">ms</span>
+            </div>
+            <div class="metric-footer">
+                <span>Deficit:</span> <strong id="deficitText" style="color:var(--status-good);">None Detected</strong>
+            </div>
+        </div>
+
+        <!-- Rate Trend Trajectory -->
+        <div class="metric-card">
+            <div class="metric-header">
+                <span>Rate Trajectory</span>
+                <span id="trendBadge" class="status-badge" style="background:rgba(59,130,246,0.2); color:#60a5fa;">STABLE</span>
+            </div>
+            <div class="metric-value-container">
+                <span id="trendSlopeVal" class="metric-value" style="font-size:1.6rem;">+0.2</span>
+                <span class="metric-unit">BPM/min</span>
+            </div>
+            <div class="metric-footer">
+                <span>Confidence:</span> <strong id="trendConfText">92%</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dual Oscilloscopes -->
+    <div class="oscilloscopes">
+        <!-- Channel 1: ECG -->
+        <div class="scope-card">
+            <div class="scope-header">
+                <div class="scope-channel">
+                    <span class="dot-ecg"></span>
+                    <span>Channel 1: Electrical ECG (PhysioNet Lead MLII — Zero-Phase Filtered 0.5–40 Hz)</span>
+                </div>
+                <div style="color:var(--text-muted); font-size:0.78rem;">
+                    Detected R-Peaks: <strong id="ecgBeatCount" style="color:var(--ecg-color);">6</strong>
+                </div>
+            </div>
+            <canvas id="ecgCanvas"></canvas>
+        </div>
+
+        <!-- Channel 2: PPG -->
+        <div class="scope-card">
+            <div class="scope-header">
+                <div class="scope-channel">
+                    <span class="dot-ppg"></span>
+                    <span>Channel 2: Peripheral Optical PPG (Red Channel — Bandpass Filtered 0.5–5.0 Hz)</span>
+                </div>
+                <div style="color:var(--text-muted); font-size:0.78rem;">
+                    Detected Systolic: <strong id="ppgBeatCount" style="color:var(--ppg-color);">6</strong>
+                </div>
+            </div>
+            <canvas id="ppgCanvas"></canvas>
+        </div>
+    </div>
+
+    <footer>
+        <div>Model Versions: <strong>rf-ecg-v1.0.0</strong> | <strong>ppg-peak-v1.0.0</strong> | <strong>multimodal-fusion-v1.0.0</strong></div>
+        <div style="color:#ef4444; font-weight:500;">Research prototype — not intended for medical diagnosis.</div>
+    </footer>
+
+    <script>
+        let isPlaying = true;
+        let currentOffsetSec = 0.0;
+        const stepSec = 1.0;
+        const windowDurationSec = 5.0;
+        let currentSessionId = null;
+
+        const ecgCanvas = document.getElementById("ecgCanvas");
+        const ppgCanvas = document.getElementById("ppgCanvas");
+        const ecgCtx = ecgCanvas.getContext("2d");
+        const ppgCtx = ppgCanvas.getContext("2d");
+
+        function resizeCanvases() {
+            ecgCanvas.width = ecgCanvas.parentElement.clientWidth - 28;
+            ecgCanvas.height = 190;
+            ppgCanvas.width = ppgCanvas.parentElement.clientWidth - 28;
+            ppgCanvas.height = 190;
+        }
+        window.addEventListener("resize", resizeCanvases);
+        resizeCanvases();
+
+        // Draw medical oscilloscope grid
+        function drawGrid(ctx, width, height) {
+            ctx.fillStyle = "#040711";
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
+            ctx.lineWidth = 1;
+
+            const gridStep = 24;
+            ctx.beginPath();
+            for (let x = 0; x < width; x += gridStep) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+            }
+            for (let y = 0; y < height; y += gridStep) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+            }
+            ctx.stroke();
+        }
+
+        function drawWaveform(ctx, signal, peaks, color, peakColor) {
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+            drawGrid(ctx, width, height);
+
+            if (!signal || signal.length === 0) return;
+
+            const min = Math.min(...signal);
+            const max = Math.max(...signal);
+            const range = (max - min) || 1.0;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+
+            for (let i = 0; i < signal.length; i++) {
+                const x = (i / (signal.length - 1)) * width;
+                const norm = (signal[i] - min) / range;
+                const y = height - (norm * (height - 30) + 15);
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Draw peak markers
+            if (peaks && peaks.length > 0) {
+                ctx.fillStyle = peakColor;
+                for (const p of peaks) {
+                    if (p >= 0 && p < signal.length) {
+                        const x = (p / (signal.length - 1)) * width;
+                        const norm = (signal[p] - min) / range;
+                        const y = height - (norm * (height - 30) + 15);
+
+                        ctx.beginPath();
+                        ctx.arc(x, y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+
+        async function initSession() {
+            try {
+                const res = await fetch("/api/v1/sessions", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ mode: "offline_demo", notes: "Multimodal dashboard live playback" })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentSessionId = data.session_id;
+                }
+            } catch (e) {
+                console.error("Session creation error:", e);
+            }
+        }
+
+        async function fetchNextFrame() {
+            if (!isPlaying) return;
+
+            const recordId = document.getElementById("recordSelect").value;
+            const url = `/api/v1/multimodal/demo-frame?start_sec=${currentOffsetSec}&duration_sec=${windowDurationSec}&record_id=${recordId}`;
+
+            try {
+                const res = await fetch(url);
+                if (res.ok) {
+                    const data = await res.json();
+                    updateDashboard(data);
+                    currentOffsetSec += stepSec;
+                    if (currentOffsetSec > 60.0) currentOffsetSec = 0.0;
+                }
+            } catch (err) {
+                console.error("Frame fetch error:", err);
+            }
+        }
+
+        function updateDashboard(frame) {
+            // Waveforms
+            drawWaveform(ecgCtx, frame.ecg.filtered_waveform, frame.ecg.r_peaks, "#10b981", "#ef4444");
+            drawWaveform(ppgCtx, frame.ppg.filtered_waveform, frame.ppg.peaks, "#06b6d4", "#ec4899");
+
+            // Metrics
+            document.getElementById("ecgHrVal").innerText = frame.ecg.heart_rate_bpm ? frame.ecg.heart_rate_bpm.toFixed(1) : "--";
+            document.getElementById("ppgPrVal").innerText = frame.ppg.pulse_rate_bpm ? frame.ppg.pulse_rate_bpm.toFixed(1) : "--";
+
+            const fusion = frame.fusion;
+            if (fusion) {
+                document.getElementById("discrepancyVal").innerText = fusion.rate_discrepancy_bpm !== null ? fusion.rate_discrepancy_bpm.toFixed(1) : "--";
+                document.getElementById("relErrorText").innerText = fusion.relative_discrepancy_pct !== null ? fusion.relative_discrepancy_pct.toFixed(1) + "%" : "--";
+                document.getElementById("patVal").innerText = fusion.pulse_arrival_time_ms !== null ? Math.round(fusion.pulse_arrival_time_ms) : "--";
+                document.getElementById("ppgSqiText").innerText = fusion.ppg_signal_quality.toFixed(2);
+
+                // Agreement Badge
+                const agBadge = document.getElementById("agreementBadge");
+                agBadge.innerText = fusion.agreement_level;
+                agBadge.className = `status-badge ${fusion.agreement_level === 'EXCELLENT' ? 'badge-good' : (fusion.agreement_level === 'ACCEPTABLE' ? 'badge-fair' : 'badge-poor')}`;
+
+                // Pulse Deficit
+                const defText = document.getElementById("deficitText");
+                if (fusion.pulse_deficit_detected) {
+                    defText.innerText = "DEFICIT DETECTED";
+                    defText.style.color = "var(--status-poor)";
+                } else {
+                    defText.innerText = "None Detected";
+                    defText.style.color = "var(--status-good)";
+                }
+
+                document.getElementById("ecgBeatCount").innerText = fusion.ecg_beat_count;
+                document.getElementById("ppgBeatCount").innerText = fusion.ppg_beat_count;
+            }
+        }
+
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            document.getElementById("btnPlayPause").innerText = isPlaying ? "Pause" : "Resume";
+        }
+
+        function resetPlayback() {
+            currentOffsetSec = 0.0;
+        }
+
+        function exportSessionCSV() {
+            if (currentSessionId) {
+                window.open(`/api/v1/sessions/${currentSessionId}/export`, "_blank");
+            } else {
+                alert("No active session initialized yet.");
+            }
+        }
+
+        initSession();
+        setInterval(fetchNextFrame, 1000);
+    </script>
+</body>
+</html>

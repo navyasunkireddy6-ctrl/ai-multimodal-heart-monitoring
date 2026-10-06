@@ -7,6 +7,7 @@ from backend.api.routers.trend import router as trend_router
 from backend.api.routers.sessions import router as sessions_router
 from backend.api.routers.playback import router as playback_router
 from backend.api.routers.websocket import router as websocket_router
+from backend.api.routers.multimodal import router as multimodal_router
 
 __all__ = [
     "health_router",
@@ -16,4 +17,5 @@ __all__ = [
     "sessions_router",
     "playback_router",
     "websocket_router",
+    "multimodal_router",
 ]

@@ -292,3 +292,48 @@ class PPGWebSocketResponse(BaseModel):
     raw_red: Optional[float] = Field(None)
     filtered_value: Optional[float] = Field(None)
     warning: Optional[str] = Field(None, description="Advisory message when signal quality is degraded")
+
+
+# ============================================================================
+# Multimodal Synchronization & Fusion Schemas
+# ============================================================================
+
+class MultimodalAnalyzeRequest(BaseModel):
+    """Request payload for simultaneous multimodal ECG and PPG evaluation."""
+    ecg_signal: List[float] = Field(..., description="ECG signal voltage samples")
+    ecg_sampling_rate_hz: float = Field(360.0, description="ECG sampling rate in Hz", gt=0)
+    ppg_signal: List[float] = Field(..., description="Optical PPG intensity samples")
+    ppg_sampling_rate_hz: float = Field(30.0, description="PPG camera/sensor sampling rate in Hz", gt=0)
+    record_id: Optional[str] = Field(None, description="Optional dataset record identifier")
+    session_id: Optional[str] = Field(None, description="Optional active session ID to append record to")
+
+
+class MultimodalAnalyzeResponse(BaseModel):
+    """Response containing synchronized dual-rate comparison, transit time, and fused metrics."""
+    model_config = ConfigDict(use_enum_values=True)
+
+    ecg_heart_rate_bpm: Optional[float] = Field(None, description="ECG-derived heart rate")
+    ppg_pulse_rate_bpm: Optional[float] = Field(None, description="PPG-derived pulse rate")
+    rate_discrepancy_bpm: Optional[float] = Field(None, description="Absolute difference |HR - PR| in BPM")
+    relative_discrepancy_pct: Optional[float] = Field(None, description="Percentage discrepancy relative to HR")
+    agreement_level: str = Field(..., description="EXCELLENT, ACCEPTABLE, DISCREPANT, or UNAVAILABLE")
+    pulse_arrival_time_ms: Optional[float] = Field(None, description="Mean transit latency between R-peak and systolic peak in ms")
+    pat_variability_ms: Optional[float] = Field(None, description="Standard deviation of transit latency across window")
+    ecg_beat_count: int = Field(..., description="Detected ECG R-peaks in window")
+    ppg_beat_count: int = Field(..., description="Detected PPG systolic peaks in window")
+    pulse_deficit_detected: bool = Field(False, description="Flag indicating pulse deficit anomaly")
+    ecg_signal_quality: float = Field(..., description="ECG SQI [0.0, 1.0]")
+    ppg_signal_quality: float = Field(..., description="PPG SQI [0.0, 1.0]")
+    fused_signal_quality: float = Field(..., description="Weighted multimodal fusion SQI [0.0, 1.0]")
+    fused_quality_label: QualityLabelEnum = Field(..., description="GOOD, FAIR, POOR")
+    rhythm_class: Optional[str] = Field(None, description="ECG predicted rhythm class")
+    rhythm_confidence: Optional[float] = Field(None, description="Arrhythmia classifier confidence")
+    trend: Optional[TrendLabelEnum] = Field(None, description="Rate trajectory trend")
+    recommended_primary_modality: str = Field("BOTH", description="Recommended primary sensor: BOTH, ECG, or PPG")
+    canonical_measurement: CanonicalMeasurement = Field(..., description="Standardized canonical measurement record")
+    model_version: str = Field(..., description="Fusion pipeline version")
+    disclaimer: str = Field(
+        "Research prototype — not intended for medical diagnosis.",
+        description="Mandatory medical disclaimer"
+    )
+

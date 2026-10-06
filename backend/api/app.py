@@ -17,10 +17,12 @@ from backend.api.routers import (
     sessions_router,
     playback_router,
     websocket_router,
+    multimodal_router,
 )
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
-DASHBOARD_HTML = ROOT_DIR / "dashboard" / "phase4_viewer.html"
+DASHBOARD_MULTIMODAL = ROOT_DIR / "dashboard" / "multimodal_dashboard.html"
+DASHBOARD_PHASE4 = ROOT_DIR / "dashboard" / "phase4_viewer.html"
 
 
 def create_app() -> FastAPI:
@@ -50,16 +52,20 @@ def create_app() -> FastAPI:
     app.include_router(trend_router, prefix=api_v1_prefix)
     app.include_router(sessions_router, prefix=api_v1_prefix)
     app.include_router(playback_router, prefix=api_v1_prefix)
+    app.include_router(multimodal_router, prefix=api_v1_prefix)
 
     # Mount live streaming WebSocket router
     app.include_router(websocket_router)
 
     # Informational root and viewer routes
     @app.get("/", response_class=HTMLResponse)
+    @app.get("/dashboard", response_class=HTMLResponse)
     def index():
-        """Serve the ECG/PPG dashboard or API metadata."""
-        if DASHBOARD_HTML.exists():
-            return DASHBOARD_HTML.read_text(encoding="utf-8")
+        """Serve the Multimodal Cardiac Monitoring Web Dashboard."""
+        if DASHBOARD_MULTIMODAL.exists():
+            return DASHBOARD_MULTIMODAL.read_text(encoding="utf-8")
+        if DASHBOARD_PHASE4.exists():
+            return DASHBOARD_PHASE4.read_text(encoding="utf-8")
         return HTMLResponse(
             "<h3>Multimodal Real-Time Cardiac Monitoring API</h3><p>Navigate to <a href='/docs'>/docs</a> for Swagger UI.</p>"
         )
@@ -77,6 +83,8 @@ def create_app() -> FastAPI:
                 "ppg_quality": "/api/v1/ppg/quality",
                 "trend_predict": "/api/v1/trend/predict",
                 "sessions": "/api/v1/sessions",
+                "multimodal_analyze": "/api/v1/multimodal/analyze",
+                "multimodal_demo_frame": "/api/v1/multimodal/demo-frame",
                 "playback": "/api/v1/playback/frame",
                 "websocket_ppg": "/ws/v1/ppg",
             },
