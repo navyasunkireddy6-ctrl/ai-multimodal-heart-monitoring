@@ -93,6 +93,8 @@ class ECGFeatureExtractor:
             default_dict = {f: 0.0 for f in FEATURE_NAMES}
             return default_dict, np.zeros(len(FEATURE_NAMES), dtype=np.float64)
 
+        arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
+
         # 1. Obtain filtered signal and RR intervals if not provided
         if rr_intervals_ms is None or len(rr_intervals_ms) < 2:
             analysis = self.processor.process(arr)
@@ -130,26 +132,29 @@ class ECGFeatureExtractor:
         # 3. Waveform Morphological & Statistical Features
         sig_kurt = float(kurtosis(filtered)) if len(filtered) > 10 else 3.0
         sig_skew = float(skew(filtered)) if len(filtered) > 10 else 0.0
-        qrs_energy = float(np.mean(filtered ** 2))
+        qrs_energy = float(np.mean(filtered ** 2)) if len(filtered) > 0 else 0.0
 
         # Spectral QRS energy ratio (5 - 25 Hz band)
-        freqs = np.fft.rfftfreq(len(filtered), d=1.0 / self.sampling_rate_hz)
-        fft_vals = np.abs(np.fft.rfft(filtered)) ** 2
-        total_power = np.sum(fft_vals) + 1e-12
-        qrs_band = (freqs >= 5.0) & (freqs <= 25.0)
-        spectral_ratio = float(np.sum(fft_vals[qrs_band]) / total_power)
+        if len(filtered) > 0:
+            freqs = np.fft.rfftfreq(len(filtered), d=1.0 / self.sampling_rate_hz)
+            fft_vals = np.abs(np.fft.rfft(filtered)) ** 2
+            total_power = np.sum(fft_vals) + 1e-12
+            qrs_band = (freqs >= 5.0) & (freqs <= 25.0)
+            spectral_ratio = float(np.sum(fft_vals[qrs_band]) / total_power)
+        else:
+            spectral_ratio = 0.0
 
         features: Dict[str, float] = {
-            "mean_rr_ms": mean_rr,
-            "sdnn_ms": sdnn,
-            "rmssd_ms": rmssd,
-            "pnn50": pnn50,
-            "cv_rr": cv_rr,
-            "heart_rate_bpm": hr,
-            "kurtosis": sig_kurt,
-            "skewness": sig_skew,
-            "qrs_energy": qrs_energy,
-            "spectral_qrs_ratio": spectral_ratio,
+            "mean_rr_ms": float(mean_rr) if np.isfinite(mean_rr) else 800.0,
+            "sdnn_ms": float(sdnn) if np.isfinite(sdnn) else 0.0,
+            "rmssd_ms": float(rmssd) if np.isfinite(rmssd) else 0.0,
+            "pnn50": float(pnn50) if np.isfinite(pnn50) else 0.0,
+            "cv_rr": float(cv_rr) if np.isfinite(cv_rr) else 0.0,
+            "heart_rate_bpm": float(hr) if np.isfinite(hr) else 72.0,
+            "kurtosis": float(sig_kurt) if np.isfinite(sig_kurt) else 3.0,
+            "skewness": float(sig_skew) if np.isfinite(sig_skew) else 0.0,
+            "qrs_energy": float(qrs_energy) if np.isfinite(qrs_energy) else 0.0,
+            "spectral_qrs_ratio": float(spectral_ratio) if np.isfinite(spectral_ratio) else 0.0,
         }
 
         vector = np.array([features[name] for name in FEATURE_NAMES], dtype=np.float64)
@@ -161,7 +166,7 @@ class ECGClassifier:
 
     def __init__(
         self,
-        model_path: Optional[Path] = None,
+        model_path: Optional[Path | str] = None,
         model_version: str = MODEL_VERSION,
         sampling_rate_hz: float = 360.0
     ):
@@ -281,7 +286,7 @@ class ECGClassifier:
             try:
                 probs = self.model.predict_proba([feat_vector])[0]
                 best_idx = int(np.argmax(probs))
-                predicted_class = self.model.classes_[best_idx]
+                predicted_class = str(self.model.classes_[best_idx])
                 confidence = float(probs[best_idx])
             except Exception:
                 predicted_class, confidence = self._rule_based_fallback(feat_dict)
@@ -289,8 +294,8 @@ class ECGClassifier:
             predicted_class, confidence = self._rule_based_fallback(feat_dict)
 
         return ECGClassificationResult(
-            rhythm_class=predicted_class,
-            rhythm_confidence=confidence,
+            rhythm_class=str(predicted_class),
+            rhythm_confidence=float(confidence),
             model_version=self.model_version,
             features=feat_dict,
         )

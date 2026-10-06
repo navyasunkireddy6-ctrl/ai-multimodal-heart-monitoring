@@ -18,6 +18,7 @@ import numpy as np
 
 from ml.ecg.processor import ECGProcessor, ECGAnalysisResult
 from ml.ecg.dataset import ECGDatasetLoader, ECGWindow
+from ml.ecg.classifier import ECGClassifier, ECGClassificationResult
 
 
 class PlaybackState(str, Enum):
@@ -123,9 +124,11 @@ class ECGPlaybackEngine:
         self._ann_symbols = symbols
         self._ann_labels = labels
 
-        # Ensure processor has matching sampling rate
+        # Ensure processor and classifier have matching sampling rate
         if self.processor.sampling_rate_hz != fs:
             self.processor = ECGProcessor(sampling_rate_hz=fs)
+        if not hasattr(self, "classifier") or self.classifier.sampling_rate_hz != fs:
+            self.classifier = ECGClassifier(sampling_rate_hz=fs)
 
         self.current_window_idx = 0
         self.current_sample_idx = 0
@@ -188,15 +191,12 @@ class ECGPlaybackEngine:
         # Process the window through ECG processor
         analysis: ECGAnalysisResult = self.processor.process(raw_window)
 
-        # Lookup dominant rhythm annotation in current window
-        in_mask = (self._ann_samples >= start_idx) & (self._ann_samples < end_idx)
-        win_symbols = [self._ann_symbols[i] for i, m in enumerate(in_mask) if m]
-        if win_symbols:
-            arrhythmias = [s for s in win_symbols if s in ["V", "A", "L", "R", "F", "E"]]
-            dom_sym = arrhythmias[0] if arrhythmias else win_symbols[0]
-            dom_rhythm = from_symbol_to_rhythm(dom_sym)
-        else:
-            dom_rhythm = "Normal Sinus Rhythm"
+        # Real-time ML arrhythmia classification
+        cls_res = self.classifier.predict(
+            signal=raw_window,
+            sampling_rate_hz=self._fs,
+            rr_intervals_ms=analysis.rr_intervals_ms.tolist() if len(analysis.rr_intervals_ms) > 0 else None,
+        )
 
         frame = ECGPlaybackFrame(
             timestamp=datetime.now(timezone.utc).isoformat(),
@@ -214,8 +214,8 @@ class ECGPlaybackEngine:
             heart_rate_bpm=analysis.heart_rate_bpm,
             signal_quality=analysis.signal_quality,
             quality_label=analysis.quality_label,
-            predicted_rhythm_class=dom_rhythm,
-            rhythm_confidence=0.96 if analysis.quality_label == "GOOD" else 0.75,
+            predicted_rhythm_class=cls_res.rhythm_class,
+            rhythm_confidence=round(float(cls_res.rhythm_confidence), 4),
             state=self.state.value,
         )
 

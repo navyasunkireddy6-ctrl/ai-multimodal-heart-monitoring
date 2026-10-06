@@ -68,8 +68,9 @@ class ECGProcessor:
     def filter_signal(self, signal: np.ndarray) -> np.ndarray:
         """Apply zero-phase Butterworth bandpass filter to eliminate baseline wander and high-freq noise."""
         signal = np.asarray(signal, dtype=np.float64)
-        if len(signal) < 15:
-            return signal
+        signal = np.nan_to_num(signal, nan=0.0, posinf=0.0, neginf=0.0)
+        if len(signal) < 25:
+            return signal - np.mean(signal) if len(signal) > 0 else signal
 
         nyquist = 0.5 * self.sampling_rate_hz
         # Ensure cutoff frequencies do not exceed Nyquist
@@ -81,9 +82,12 @@ class ECGProcessor:
             return signal - np.mean(signal)
 
         # Second-order sections (SOS) representation for numerical stability
-        sos = butter(self.filter_order, [low, high], btype="bandpass", output="sos")
-        filtered = sosfiltfilt(sos, signal)
-        return filtered
+        try:
+            sos = butter(self.filter_order, [low, high], btype="bandpass", output="sos")
+            filtered = sosfiltfilt(sos, signal)
+            return filtered
+        except Exception:
+            return signal - np.mean(signal)
 
     def detect_r_peaks(self, filtered_signal: np.ndarray) -> np.ndarray:
         """Detect QRS complexes and locate R-peaks using a Pan-Tompkins inspired workflow.

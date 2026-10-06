@@ -13,6 +13,14 @@ from ml.ecg.playback import (
     ECGPlaybackEngine,
 )
 
+from ml.ecg.classifier import (
+    ECGClassifier,
+    ECGFeatureExtractor,
+    ECGClassificationResult,
+    FEATURE_NAMES,
+    MODEL_VERSION,
+)
+
 __all__ = [
     "ECGProcessor",
     "ECGAnalysisResult",
@@ -23,4 +31,10 @@ __all__ = [
     "PlaybackState",
     "ECGPlaybackFrame",
     "ECGPlaybackEngine",
+    "ECGClassifier",
+    "ECGFeatureExtractor",
+    "ECGClassificationResult",
+    "FEATURE_NAMES",
+    "MODEL_VERSION",
 ]
+
