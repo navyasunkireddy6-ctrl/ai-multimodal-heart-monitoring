@@ -4,6 +4,7 @@ This module represents the canonical data schema and interface types.
 Field names and enum values are non-negotiable and strictly adhere to docs/API_CONTRACT.md.
 """
 
+from __future__ import annotations
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -292,6 +293,7 @@ class PPGWebSocketResponse(BaseModel):
     raw_red: Optional[float] = Field(None)
     filtered_value: Optional[float] = Field(None)
     warning: Optional[str] = Field(None, description="Advisory message when signal quality is degraded")
+    active_alert: Optional[CardiacAlert] = Field(None, description="Active anomaly alert triggered in this frame")
 
 
 # ============================================================================
@@ -336,4 +338,77 @@ class MultimodalAnalyzeResponse(BaseModel):
         "Research prototype — not intended for medical diagnosis.",
         description="Mandatory medical disclaimer"
     )
+
+
+# ============================================================================
+# Phase 11: Real-Time Cardiac Anomaly Alert Schemas
+# ============================================================================
+
+class AlertSeverityEnum(str, Enum):
+    """Severity classification for cardiac telemetry alerts."""
+    INFO = "INFO"
+    WARNING = "WARNING"
+    CRITICAL = "CRITICAL"
+
+
+class AlertTypeEnum(str, Enum):
+    """Categorical classification of cardiac anomalies and sensor alerts."""
+    TACHYCARDIA = "TACHYCARDIA"
+    BRADYCARDIA = "BRADYCARDIA"
+    ARRHYTHMIA_DETECTED = "ARRHYTHMIA_DETECTED"
+    PULSE_DEFICIT = "PULSE_DEFICIT"
+    POOR_SIGNAL_QUALITY = "POOR_SIGNAL_QUALITY"
+    RATE_SPIKE = "RATE_SPIKE"
+
+
+class CardiacAlert(BaseModel):
+    """Structured representation of a real-time cardiac anomaly alert."""
+    model_config = ConfigDict(use_enum_values=True)
+
+    alert_id: str = Field(..., description="Unique UUID for this alert incident")
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="ISO-8601 alert generation timestamp"
+    )
+    severity: AlertSeverityEnum = Field(..., description="Alert severity level: INFO, WARNING, CRITICAL")
+    alert_type: AlertTypeEnum = Field(..., description="Category of cardiac event")
+    message: str = Field(..., description="Clinical advisory description")
+    metrics: Dict[str, Any] = Field(default_factory=dict, description="Contextual sensor metrics at alert onset")
+    session_id: Optional[str] = Field(None, description="Associated active session ID if available")
+    acknowledged: bool = Field(False, description="Whether alert has been acknowledged by user/clinician")
+    acknowledged_at: Optional[str] = Field(None, description="Timestamp of acknowledgment")
+    disclaimer: str = Field(
+        "Research prototype — not intended for medical diagnosis.",
+        description="Mandatory medical disclaimer"
+    )
+
+
+class AlertConfig(BaseModel):
+    """Configurable clinical thresholds for the alert evaluation engine."""
+    tachycardia_threshold_bpm: float = Field(100.0, description="Rate above which tachycardia warning triggers", ge=60.0, le=250.0)
+    critical_tachycardia_bpm: float = Field(130.0, description="Rate above which critical tachycardia alarm triggers", ge=80.0, le=300.0)
+    bradycardia_threshold_bpm: float = Field(60.0, description="Rate below which bradycardia warning triggers", ge=20.0, le=100.0)
+    critical_bradycardia_bpm: float = Field(45.0, description="Rate below which critical bradycardia alarm triggers", ge=10.0, le=80.0)
+    min_arrhythmia_confidence: float = Field(0.65, description="Minimum ML classifier confidence to trigger arrhythmia alert", ge=0.0, le=1.0)
+    pulse_deficit_alert_enabled: bool = Field(True, description="Enable alerts for hemodynamically significant pulse deficits")
+    poor_sqi_threshold: float = Field(0.40, description="SQI below which sensor contact warning triggers", ge=0.0, le=1.0)
+    cooldown_seconds: float = Field(5.0, description="Cooldown interval between duplicate alerts of same type", ge=1.0, le=120.0)
+
+
+class AlertListResponse(BaseModel):
+    """List container of recorded cardiac alerts."""
+    model_config = ConfigDict(use_enum_values=True)
+
+    total: int = Field(..., description="Total alerts matching filter")
+    unacknowledged_count: int = Field(..., description="Total unacknowledged alerts")
+    alerts: List[CardiacAlert] = Field(default_factory=list)
+
+
+class AlertAcknowledgeResponse(BaseModel):
+    """Response returned upon acknowledging an alert incident."""
+    alert_id: str
+    acknowledged: bool
+    acknowledged_at: str
+    message: str
+
 

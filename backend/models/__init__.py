@@ -24,6 +24,12 @@ from backend.models.schemas import (
     PPGWebSocketResponse,
     MultimodalAnalyzeRequest,
     MultimodalAnalyzeResponse,
+    AlertSeverityEnum,
+    AlertTypeEnum,
+    CardiacAlert,
+    AlertConfig,
+    AlertListResponse,
+    AlertAcknowledgeResponse,
 )
 
 __all__ = [
@@ -50,4 +56,10 @@ __all__ = [
     "PPGWebSocketResponse",
     "MultimodalAnalyzeRequest",
     "MultimodalAnalyzeResponse",
+    "AlertSeverityEnum",
+    "AlertTypeEnum",
+    "CardiacAlert",
+    "AlertConfig",
+    "AlertListResponse",
+    "AlertAcknowledgeResponse",
 ]

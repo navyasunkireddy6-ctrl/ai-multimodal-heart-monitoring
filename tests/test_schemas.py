@@ -299,3 +299,32 @@ def test_websocket_frame_schemas():
     assert outbound.type == "measurement_update"
     assert outbound.pulse_rate_bpm == 74.0
     assert outbound.quality_label == "GOOD"
+
+
+def test_alert_schemas():
+    """Test Phase 11 CardiacAlert, AlertConfig, and Alert Enums validation."""
+    from backend.models.schemas import (
+        AlertSeverityEnum,
+        AlertTypeEnum,
+        CardiacAlert,
+        AlertConfig,
+    )
+
+    alert = CardiacAlert(
+        alert_id="test-alert-uuid",
+        severity=AlertSeverityEnum.CRITICAL,
+        alert_type=AlertTypeEnum.TACHYCARDIA,
+        message="Critical tachycardia alert",
+        metrics={"rate_bpm": 140.0},
+    )
+    assert alert.severity == "CRITICAL"
+    assert alert.alert_type == "TACHYCARDIA"
+    assert alert.acknowledged is False
+
+    cfg = AlertConfig(
+        tachycardia_threshold_bpm=105.0,
+        critical_tachycardia_bpm=135.0,
+    )
+    assert cfg.tachycardia_threshold_bpm == 105.0
+    assert cfg.cooldown_seconds == 5.0
+

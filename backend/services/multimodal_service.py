@@ -15,6 +15,7 @@ from backend.models.schemas import (
     TrendLabelEnum,
 )
 from backend.services.session_service import SessionService
+from backend.services.alert_service import AlertService
 from ml.ecg.classifier import ECGClassifier
 from ml.ecg.dataset import ECGDatasetLoader
 from ml.ecg.processor import ECGProcessor
@@ -36,6 +37,7 @@ class MultimodalService:
         ecg_sampling_rate_hz: float = 360.0,
         ppg_sampling_rate_hz: float = 30.0,
         session_service: Optional[SessionService] = None,
+        alert_service: Optional[AlertService] = None,
     ):
         self.ecg_processor = ECGProcessor(sampling_rate_hz=ecg_sampling_rate_hz)
         self.ecg_classifier = ECGClassifier(sampling_rate_hz=ecg_sampling_rate_hz)
@@ -44,9 +46,13 @@ class MultimodalService:
         self.trend_analyzer = TrendAnalyzer()
         self.dataset_loader = ECGDatasetLoader()
         self.session_service = session_service
+        self.alert_service = alert_service
 
     def analyze(
-        self, request: MultimodalAnalyzeRequest, session_service: Optional[SessionService] = None
+        self,
+        request: MultimodalAnalyzeRequest,
+        session_service: Optional[SessionService] = None,
+        alert_service: Optional[AlertService] = None,
     ) -> MultimodalAnalyzeResponse:
         """Execute end-to-end multimodal analysis across simultaneous ECG and PPG windows."""
         # 1. ECG Signal Processing
@@ -120,6 +126,12 @@ class MultimodalService:
             model_version=MODEL_VERSION,
             disclaimer=sync_res.disclaimer,
         )
+
+        active_alert_svc = alert_service or self.alert_service
+        if active_alert_svc:
+            active_alert_svc.evaluate_multimodal_response(response, session_id=request.session_id)
+
+        return response
 
     def get_synchronized_demo_frame(
         self,

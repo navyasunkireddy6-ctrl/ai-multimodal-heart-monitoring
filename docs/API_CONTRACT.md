@@ -285,3 +285,37 @@ If signal quality drops to `POOR`, server responds with `pulse_rate_bpm: null` a
   "warning": "Poor optical contact. Cover camera and flash steadily."
 }
 ```
+
+---
+
+## 5. Phase 11 Canonical Cardiac Anomaly Alerts
+
+Base path: `/api/v1/alerts`
+
+### 5.1 Alert Data Model (`CardiacAlert`)
+```json
+{
+  "alert_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "timestamp": "2026-09-30T12:00:01.000Z",
+  "severity": "CRITICAL",
+  "alert_type": "ARRHYTHMIA_DETECTED",
+  "message": "ARRHYTHMIA ALERT: Premature Ventricular Contraction classified with 92.0% confidence.",
+  "metrics": {
+    "rhythm_class": "Premature Ventricular Contraction",
+    "confidence": 0.92,
+    "model_version": "rf-ecg-v1.0.0"
+  },
+  "session_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "acknowledged": false,
+  "acknowledged_at": null,
+  "disclaimer": "Research prototype — not intended for medical diagnosis."
+}
+```
+
+### 5.2 Canonical Endpoints
+- **List Alerts**: `GET /api/v1/alerts` (filters: `severity`, `alert_type`, `unacknowledged_only`, `limit`, `offset`)
+- **Active Alerts**: `GET /api/v1/alerts/active`
+- **Acknowledge Alert**: `POST /api/v1/alerts/{alert_id}/acknowledge`
+- **Get Alert Config**: `GET /api/v1/alerts/config`
+- **Update Alert Config**: `PUT /api/v1/alerts/config`
+

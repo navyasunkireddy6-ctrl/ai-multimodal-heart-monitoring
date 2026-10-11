@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Deque, List, Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from backend.api.deps import get_session_service
+from backend.api.deps import get_session_service, get_alert_service
 from backend.models.schemas import (
     CanonicalMeasurement,
     ModeEnum,
@@ -40,6 +40,7 @@ class PPGStreamHandler:
         self,
         frame: PPGWebSocketFrame,
         session_service,
+        alert_service=None,
     ) -> PPGWebSocketResponse:
         """Process an inbound optical PPG frame and compute real-time cardiac metrics."""
         self.raw_buffer.append(float(frame.red_channel_value))
@@ -108,6 +109,26 @@ class PPGStreamHandler:
                     except Exception:
                         trend_label = TrendLabelEnum.STABLE
 
+        canonical_meas = CanonicalMeasurement(
+            timestamp=frame.timestamp,
+            mode=ModeEnum.SMARTPHONE_PPG,
+            heart_rate_bpm=None,
+            pulse_rate_bpm=pulse_rate,
+            signal_quality=round(float(result.signal_quality), 4),
+            quality_label=quality_enum,
+            rhythm_class=None,
+            rhythm_confidence=None,
+            trend=trend_label,
+            model_version=PPG_MODEL_VERSION,
+        )
+
+        # Check for anomaly alerts
+        active_alert = None
+        if alert_service:
+            triggered = alert_service.evaluate_measurement(canonical_meas, session_id=frame.session_id)
+            if triggered:
+                active_alert = triggered[0]
+
         response = PPGWebSocketResponse(
             type="measurement_update",
             timestamp=frame.timestamp,
@@ -123,23 +144,12 @@ class PPGStreamHandler:
             raw_red=round(float(frame.red_channel_value), 2),
             filtered_value=round(filtered_val, 4) if filtered_val is not None else None,
             warning=warning,
+            active_alert=active_alert,
         )
 
         # Record to active session if session_id provided and exists
         if frame.session_id:
-            meas = CanonicalMeasurement(
-                timestamp=frame.timestamp,
-                mode=ModeEnum.SMARTPHONE_PPG,
-                heart_rate_bpm=None,
-                pulse_rate_bpm=pulse_rate,
-                signal_quality=round(float(result.signal_quality), 4),
-                quality_label=quality_enum,
-                rhythm_class=None,
-                rhythm_confidence=None,
-                trend=trend_label,
-                model_version=PPG_MODEL_VERSION,
-            )
-            session_service.add_measurement(frame.session_id, meas)
+            session_service.add_measurement(frame.session_id, canonical_meas)
 
         return response
 
@@ -149,6 +159,7 @@ async def websocket_ppg_stream(websocket: WebSocket):
     """Bidirectional streaming WebSocket endpoint for optical smartphone PPG frames."""
     await websocket.accept()
     session_service = get_session_service()
+    alert_service = get_alert_service()
     handler = PPGStreamHandler()
 
     try:
@@ -165,7 +176,7 @@ async def websocket_ppg_stream(websocket: WebSocket):
                 await websocket.send_text(json.dumps(err_resp))
                 continue
 
-            resp_frame = handler.process_frame(frame, session_service)
+            resp_frame = handler.process_frame(frame, session_service, alert_service=alert_service)
             await websocket.send_text(resp_frame.model_dump_json())
 
     except WebSocketDisconnect:
