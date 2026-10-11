@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">BioQuest Cardiac Monitor</string>
+    <string name="instruction_text">Place your index fingertip steadily over the rear camera lens and flashlight.</string>
+    <string name="pulse_rate_label">Pulse Rate (BPM)</string>
+    <string name="quality_label">Signal Quality</string>
+    <string name="trend_label">Rate Trend</string>
+    <string name="toggle_torch">Toggle Torch</string>
+    <string name="torch_on_label">Turn Torch On</string>
+    <string name="torch_off_label">Turn Torch Off</string>
+</resources>

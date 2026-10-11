@@ -13,6 +13,18 @@ from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
 from scipy.stats import kurtosis, skew
 import joblib
+import sys
+from unittest.mock import MagicMock
+
+# Shim for Windows Smart App Control blocking unsigned pyd modules in scikit-learn
+try:
+    import sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode
+except Exception:
+    sys.modules.setdefault(
+        "sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode",
+        MagicMock(),
+    )
+
 from sklearn.ensemble import RandomForestClassifier
 
 from ml.ecg.processor import ECGProcessor

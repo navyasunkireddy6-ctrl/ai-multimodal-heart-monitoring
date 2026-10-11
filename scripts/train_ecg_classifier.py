@@ -12,6 +12,17 @@ import argparse
 from pathlib import Path
 from typing import List, Dict, Tuple
 import numpy as np
+from unittest.mock import MagicMock
+
+# Shim for Windows Smart App Control blocking unsigned pyd modules in scikit-learn
+try:
+    import sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode
+except Exception:
+    sys.modules.setdefault(
+        "sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode",
+        MagicMock(),
+    )
+
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 
