@@ -13,6 +13,8 @@ Runs all 12 system phases in sequence:
   Phase 10: Android PPG App Architecture & Mobile Streaming Integration
   Phase 11: Real-Time Cardiac Anomaly Alerts & Emergency Notification Engine
   Phase 12: Automated Clinical Diagnostic Report Generation & Analytics Export
+  Phase 13: High-Concurrency Multi-Patient Stress & Performance Benchmarking
+  Phase 14: Unified Clinical Central Station Web Workstation & Production Deployment
 
 Usage:
     python scripts/run_all_phases.py
@@ -115,13 +117,25 @@ PHASES: List[PhaseTask] = [
         command=[sys.executable, "scripts/demo_clinical_reporting.py"],
         description="Vital statistics aggregation, arrhythmia distributions, automated impressions, and HTML export.",
     ),
+    PhaseTask(
+        phase_num=13,
+        name="High-Concurrency Multi-Patient Benchmarking",
+        command=[sys.executable, "scripts/demo_concurrency_benchmark.py"],
+        description="Simulates 10 concurrent streams, measuring throughput, latency quantiles (p50/p95/p99), and jitter.",
+    ),
+    PhaseTask(
+        phase_num=14,
+        name="Clinical Central Station & Production Deployment",
+        command=[sys.executable, "scripts/demo_clinical_workstation.py"],
+        description="Dual canvas sweep strip charts, bed selector, alert triage, report modal, and Docker deployment.",
+    ),
 ]
 
 
 def run_all() -> int:
     print("=" * 85)
     print("      BIOQUEST MULTIMODAL CARDIAC MONITORING SYSTEM - MASTER VERIFICATION")
-    print("      Executing All 12 Phases Sequentially (Phases 1 through 12)")
+    print(f"      Executing All {len(PHASES)} Phases Sequentially (Phases 1 through {len(PHASES)})")
     print("=" * 85)
     print(f" Working Directory : {ROOT_DIR}")
     print(f" Python Interpreter: {sys.executable}")
@@ -132,7 +146,7 @@ def run_all() -> int:
     total_start = time.perf_counter()
 
     for task in PHASES:
-        print(f"\n>> [PHASE {task.phase_num:02d}/12] {task.name.upper()}...")
+        print(f"\n>> [PHASE {task.phase_num:02d}/{len(PHASES):02d}] {task.name.upper()}...")
         print(f"   Action: {task.description}")
         print(f"   Command: {' '.join(task.command)}")
         t0 = time.perf_counter()
@@ -160,7 +174,7 @@ def run_all() -> int:
 
     # Final Scorecard
     print("\n" + "=" * 85)
-    print("                     ALL 12 PHASES EXECUTION SCORECARD")
+    print(f"                     ALL {len(PHASES)} PHASES EXECUTION SCORECARD")
     print("=" * 85)
     print(f" {'PHASE':<8} | {'PHASE NAME':<45} | {'STATUS':<8} | {'RUNTIME':<8}")
     print("-" * 85)
@@ -178,7 +192,7 @@ def run_all() -> int:
     print("=" * 85)
 
     if failures == 0:
-        print("\n [SUCCESS] ALL 12 PHASES EXECUTED CLEANLY WITH ZERO PERSISTENT ERRORS!")
+        print(f"\n [SUCCESS] ALL {len(PHASES)} PHASES EXECUTED CLEANLY WITH ZERO PERSISTENT ERRORS!")
         return 0
     else:
         print(f"\n [ERROR] {failures} phase(s) failed during execution.")

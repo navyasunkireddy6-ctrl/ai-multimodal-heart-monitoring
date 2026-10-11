@@ -7,6 +7,7 @@ from backend.services.session_service import SessionService
 from backend.services.multimodal_service import MultimodalService
 from backend.services.alert_service import AlertService
 from backend.services.report_service import ReportService
+from backend.services.benchmark_service import BenchmarkService
 
 __all__ = [
     "ECGService",
@@ -16,4 +17,5 @@ __all__ = [
     "MultimodalService",
     "AlertService",
     "ReportService",
+    "BenchmarkService",
 ]

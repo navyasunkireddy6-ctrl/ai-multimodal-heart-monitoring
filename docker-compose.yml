@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  bioquest-telemetry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bioquest_cardiac_monitoring
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LOG_LEVEL=info
+      - SQLITE_DB_PATH=/app/data/bioquest_sessions.db
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/v1/health').getcode() == 200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

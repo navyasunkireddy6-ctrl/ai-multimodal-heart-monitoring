@@ -375,4 +375,58 @@ Base path: `/api/v1/reports`
 - **Synthesize Ad-Hoc Report**: `POST /api/v1/reports/generate`
   - Accepts a payload with `measurements: List[CanonicalMeasurement]` and optional `patient_notes`, returning a synthesized `ClinicalReportSummary` without requiring an existing persisted session.
 
+---
+
+## 7. Phase 13 High-Concurrency Multi-Patient Benchmarking
+
+Base path: `/api/v1/benchmark`
+
+### 7.1 Benchmark Result Model (`ConcurrencyBenchmarkResult`)
+```json
+{
+  "benchmark_id": "359722ae-2a69-4405-8535-bda149293f2e",
+  "timestamp": "2026-10-11T17:34:53.894Z",
+  "concurrent_patients": 10,
+  "total_frames_processed": 300,
+  "total_duration_seconds": 0.81,
+  "overall_throughput_fps": 369.4,
+  "p50_latency_ms": 13.14,
+  "p95_latency_ms": 16.51,
+  "p99_latency_ms": 18.99,
+  "max_latency_ms": 22.29,
+  "mean_jitter_ms": 5.58,
+  "overall_packet_loss_pct": 0.0,
+  "slo_passed": true,
+  "slo_details": {
+    "p95_latency_slo_under_threshold": true,
+    "zero_excessive_packet_loss": true,
+    "concurrency_target_achieved": true,
+    "high_throughput_sustained": true
+  },
+  "patient_metrics": [
+    {
+      "patient_id": "PT-SIM-001",
+      "frames_sent": 30,
+      "frames_received": 30,
+      "packet_loss_rate": 0.0,
+      "mean_latency_ms": 11.56,
+      "p95_latency_ms": 16.28,
+      "jitter_ms": 6.32,
+      "fps": 38.0
+    }
+  ],
+  "disclaimer": "Research prototype — not intended for medical diagnosis."
+}
+```
+
+### 7.2 Canonical Endpoints
+- **Run Benchmark**: `POST /api/v1/benchmark/run`
+  - Body: `ConcurrencyBenchmarkRequest` (`concurrent_patients`, `frames_per_patient`, `target_fps`, `mode`)
+  - Returns `ConcurrencyBenchmarkResult` with latency percentiles, throughput, and SLO audit.
+- **Get Latest Benchmark**: `GET /api/v1/benchmark/last`
+  - Returns the latest completed benchmark result.
+- **Get Benchmark HTML Dashboard**: `GET /api/v1/benchmark/html`
+  - Returns publication-quality standalone HTML dashboard with styling, tables, and SLO badge.
+
+
 

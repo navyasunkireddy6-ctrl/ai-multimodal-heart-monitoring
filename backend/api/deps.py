@@ -10,11 +10,13 @@ from backend.services.session_service import SessionService
 from backend.services.multimodal_service import MultimodalService
 from backend.services.alert_service import AlertService
 from backend.services.report_service import ReportService
+from backend.services.benchmark_service import BenchmarkService
 from ml.ecg.playback import ECGPlaybackEngine
 
 _session_service = SessionService()
 _alert_service = AlertService()
 _report_service: Optional[ReportService] = None
+_benchmark_service: Optional[BenchmarkService] = None
 _ecg_service: Optional[ECGService] = None
 _ppg_service: Optional[PPGService] = None
 _trend_service: Optional[TrendService] = None
@@ -85,3 +87,11 @@ def get_multimodal_service() -> MultimodalService:
             alert_service=_alert_service,
         )
     return _multimodal_service
+
+
+def get_benchmark_service() -> BenchmarkService:
+    """Return or initialize the global BenchmarkService instance."""
+    global _benchmark_service
+    if _benchmark_service is None:
+        _benchmark_service = BenchmarkService()
+    return _benchmark_service

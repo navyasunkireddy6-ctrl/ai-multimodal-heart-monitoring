@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioQuest — Clinical Central Station & Multi-Patient Workstation</title>
+  <style>
+    :root {
+      --bg-dark: #080d1a;
+      --panel-bg: rgba(15, 23, 42, 0.85);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --ecg-green: #10b981;
+      --ppg-cyan: #06b6d4;
+      --pat-purple: #a855f7;
+      --alarm-critical: #ef4444;
+      --alarm-warning: #f59e0b;
+      --accent-blue: #3b82f6;
+      --card-radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation Bar */
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: white;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .bed-selector {
+      display: flex;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .bed-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .bed-btn.active {
+      background: var(--accent-blue);
+      color: white;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    }
+
+    .bed-btn:hover:not(.active) {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .action-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--panel-border);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .action-btn.btn-primary {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: white;
+    }
+
+    .action-btn.btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    /* Main Grid Layout */
+    .main-container {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      padding: 16px 24px;
+      flex: 1;
+    }
+
+    /* Left Column: Waveforms and Strip Charts */
+    .telemetry-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Vitals Summary Strip */
+    .vitals-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .vital-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--card-radius);
+      padding: 14px 18px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .vital-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .vital-card.card-ecg::before { background: var(--ecg-green); }
+    .vital-card.card-ppg::before { background: var(--ppg-cyan); }
+    .vital-card.card-pat::before { background: var(--pat-purple); }
+    .vital-card.card-sqi::before { background: var(--accent-blue); }
+
+    .vital-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .vital-value-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .vital-value {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .vital-unit {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .vital-subtext {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Waveform Canvases */
+    .waveform-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--card-radius);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .waveform-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .waveform-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .waveform-pill {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .pill-ecg { background: rgba(16, 185, 129, 0.15); color: var(--ecg-green); }
+    .pill-ppg { background: rgba(6, 182, 212, 0.15); color: var(--ppg-cyan); }
+
+    canvas.scope-canvas {
+      width: 100%;
+      height: 180px;
+      background: #030712;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: block;
+    }
+
+    /* Right Column: Triage, Alerts & Controls */
+    .triage-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--card-radius);
+      padding: 18px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 10px;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    /* Alert Incident Feed */
+    .alerts-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .alert-item {
+      background: rgba(30, 41, 59, 0.6);
+      border-left: 4px solid var(--alarm-warning);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .alert-item.critical {
+      border-left-color: var(--alarm-critical);
+      background: rgba(239, 68, 68, 0.12);
+      animation: alertPulse 1.8s infinite;
+    }
+
+    @keyframes alertPulse {
+      0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+      50% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.35); }
+    }
+
+    .alert-top {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+    }
+
+    .alert-msg {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      line-height: 1.3;
+    }
+
+    .ack-btn {
+      align-self: flex-end;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-primary);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+
+    .ack-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Report Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .modal-card {
+      background: #111827;
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 650px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 12px;
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      font-size: 0.85rem;
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .report-stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--ecg-green);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Print styles */
+    @media print {
+      body { background: white; color: black; }
+      .navbar, .triage-column, .action-btn { display: none !important; }
+      .main-container { grid-template-columns: 1fr; }
+      .waveform-card, .vital-card { border: 1px solid #ccc; box-shadow: none; background: white; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="navbar">
+    <div class="brand">
+      <div class="brand-logo">&#x2665;</div>
+      <div>
+        <div class="brand-title">BioQuest Central Station</div>
+        <div class="brand-subtitle">Clinical Multi-Patient Telemetry Hub</div>
+      </div>
+    </div>
+
+    <!-- Multi-Patient Bed Selector -->
+    <div class="bed-selector">
+      <button class="bed-btn active" onclick="switchBed('BED-01', 'PT-40192', 'Bed 01 — ICU Alpha')">Bed 01 (ICU)</button>
+      <button class="bed-btn" onclick="switchBed('BED-02', 'PT-88340', 'Bed 02 — Telemetry Ward')">Bed 02 (Tele)</button>
+      <button class="bed-btn" onclick="switchBed('BED-03', 'PT-12091', 'Bed 03 — Post-Op PACU')">Bed 03 (PACU)</button>
+      <button class="bed-btn" onclick="switchBed('ALL', 'MULTI', 'All Active Beds')">Grid Overview</button>
+    </div>
+
+    <div class="nav-actions">
+      <div class="status-badge" id="live-indicator">
+        <span class="status-dot"></span>
+        <span id="conn-text">LIVE TELEMETRY</span>
+      </div>
+      <button class="action-btn" onclick="toggleAudioAlarm()">
+        <span id="audio-icon">&#x1F50A;</span> Alarm Audio: <span id="audio-state">ON</span>
+      </button>
+      <button class="action-btn btn-primary" onclick="openReportModal()">
+        &#x1F4C4; Generate Report
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-container">
+    <!-- Left: Waveforms & Vitals -->
+    <section class="telemetry-column">
+      <!-- Vitals Strip -->
+      <div class="vitals-grid">
+        <div class="vital-card card-ecg">
+          <div class="vital-label">ECG Heart Rate</div>
+          <div class="vital-value-wrap">
+            <span class="vital-value" id="val-hr" style="color: var(--ecg-green);">74</span>
+            <span class="vital-unit">BPM</span>
+          </div>
+          <div class="vital-subtext">
+            <span>Rhythm:</span> <strong id="val-rhythm" style="color:#e2e8f0;">Normal Sinus</strong>
+          </div>
+        </div>
+
+        <div class="vital-card card-ppg">
+          <div class="vital-label">Optical Pulse Rate</div>
+          <div class="vital-value-wrap">
+            <span class="vital-value" id="val-pr" style="color: var(--ppg-cyan);">73</span>
+            <span class="vital-unit">BPM</span>
+          </div>
+          <div class="vital-subtext">
+            <span>Trend:</span> <strong id="val-trend" style="color:#e2e8f0;">STABLE</strong>
+          </div>
+        </div>
+
+        <div class="vital-card card-pat">
+          <div class="vital-label">Pulse Arrival Time</div>
+          <div class="vital-value-wrap">
+            <span class="vital-value" id="val-pat" style="color: var(--pat-purple);">218</span>
+            <span class="vital-unit">ms</span>
+          </div>
+          <div class="vital-subtext">
+            <span>Transit:</span> <strong id="val-transit" style="color:#e2e8f0;">Normal Arterial</strong>
+          </div>
+        </div>
+
+        <div class="vital-card card-sqi">
+          <div class="vital-label">Optical Quality (SQI)</div>
+          <div class="vital-value-wrap">
+            <span class="vital-value" id="val-sqi" style="color: var(--accent-blue);">94%</span>
+            <span class="vital-unit">GOOD</span>
+          </div>
+          <div class="vital-subtext">
+            <span>Deficit:</span> <strong id="val-deficit" style="color:#10b981;">0 bpm (None)</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- ECG Waveform Card -->
+      <div class="waveform-card">
+        <div class="waveform-header">
+          <div class="waveform-title">
+            <span style="color: var(--ecg-green); font-size: 1.2rem;">&#x223F;</span>
+            Lead II Electrocardiogram (ECG) — 250 Hz
+          </div>
+          <span class="waveform-pill pill-ecg">Filter: 0.5 – 40 Hz</span>
+        </div>
+        <canvas id="ecgCanvas" class="scope-canvas" width="900" height="180"></canvas>
+      </div>
+
+      <!-- PPG Waveform Card -->
+      <div class="waveform-card">
+        <div class="waveform-header">
+          <div class="waveform-title">
+            <span style="color: var(--ppg-cyan); font-size: 1.2rem;">&#x223F;</span>
+            Smartphone Optical Photoplethysmogram (PPG) — 30 Hz
+          </div>
+          <span class="waveform-pill pill-ppg">Bandpass: 0.5 – 5.0 Hz</span>
+        </div>
+        <canvas id="ppgCanvas" class="scope-canvas" width="900" height="180"></canvas>
+      </div>
+    </section>
+
+    <!-- Right: Triage & Incident Feed -->
+    <aside class="triage-column">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">Active Bed Status</div>
+          <span id="bed-label" style="font-size:0.75rem; color:#38bdf8; font-weight:600;">Bed 01 — ICU Alpha</span>
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:6px;">
+          <div><strong>Patient ID:</strong> <span id="patient-id-display">PT-40192 (Age 64, Male)</span></div>
+          <div><strong>Indication:</strong> Acute coronary telemetry observation</div>
+          <div><strong>Active Modality:</strong> ECG + Optical PPG Multimodal</div>
+          <div><strong>Telemetry Link:</strong> <span style="color:#10b981;">WebSocket Active</span></div>
+        </div>
+      </div>
+
+      <div class="panel-card" style="flex:1; display:flex; flex-direction:column;">
+        <div class="panel-header">
+          <div class="panel-title">&#x26A0; Emergency Alert Feed</div>
+          <span id="alerts-count" style="font-size:0.75rem; background:#dc2626; color:white; padding:2px 8px; border-radius:10px; font-weight:700;">1 Active</span>
+        </div>
+        <div class="alerts-feed" id="alertsList">
+          <div class="alert-item critical">
+            <div class="alert-top">
+              <span style="color:#ef4444;">CRITICAL: TACHYCARDIA</span>
+              <span style="font-size:0.7rem; color:#94a3b8;">Just now</span>
+            </div>
+            <div class="alert-msg">Elevated heart rate excursion exceeding threshold (112.5 BPM).</div>
+            <button class="ack-btn" onclick="acknowledgeAlert(this)">Acknowledge</button>
+          </div>
+          <div class="alert-item">
+            <div class="alert-top">
+              <span style="color:#f59e0b;">WARNING: ECTOPIC BEAT</span>
+              <span style="font-size:0.7rem; color:#94a3b8;">1m ago</span>
+            </div>
+            <div class="alert-msg">Premature Ventricular Contraction classified with 92% confidence.</div>
+            <button class="ack-btn" onclick="acknowledgeAlert(this)">Acknowledge</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title">Workstation Actions</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="action-btn" onclick="runLoadBenchmark()" style="width:100%; justify-content:center;">
+            &#x26A1; Run Multi-Patient Stress Test
+          </button>
+          <button class="action-btn" onclick="window.open('/api/v1/benchmark/html', '_blank')" style="width:100%; justify-content:center;">
+            &#x1F4CA; View Benchmark Dashboard
+          </button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Report Synthesis Modal -->
+  <div class="modal-backdrop" id="reportModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">&#x1F4C4; Automated Clinical Diagnostic Report</div>
+        <button class="close-btn" onclick="closeReportModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="reportBody">
+        <div class="report-stat-row">
+          <div><span style="color:#94a3b8; font-size:0.75rem;">MEAN HR</span><br><strong id="rep-hr" style="font-size:1.1rem; color:#10b981;">74.8 BPM</strong></div>
+          <div><span style="color:#94a3b8; font-size:0.75rem;">PEAK RATE</span><br><strong id="rep-peak" style="font-size:1.1rem; color:#ef4444;">112.5 BPM</strong></div>
+          <div><span style="color:#94a3b8; font-size:0.75rem;">MEAN SQI</span><br><strong id="rep-sqi" style="font-size:1.1rem; color:#38bdf8;">0.924</strong></div>
+        </div>
+        <div>
+          <h4 style="font-size:0.85rem; color:#94a3b8; text-transform:uppercase; margin-bottom:6px;">Automated Cardiology Impressions</h4>
+          <ul style="padding-left:18px; font-size:0.82rem; color:#cbd5e1; display:flex; flex-direction:column; gap:4px;" id="rep-impressions">
+            <li>Normal resting sinus rate observed over observation window.</li>
+            <li>Transient Tachycardia observed with peak heart rate reaching 112.5 BPM.</li>
+            <li>Cardiac ectopy identified: Isolated Premature Ventricular Contractions.</li>
+            <li>High diagnostic reliability: 85.0% of recordings scored GOOD SQI.</li>
+          </ul>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--panel-border); padding-top:12px;">
+        <button class="action-btn" onclick="closeReportModal()">Close</button>
+        <button class="action-btn btn-primary" onclick="window.print()">&#x1F5A8; Print Report</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------------------
+    // Audio Alarm Synthesizer (Web Audio API)
+    // -------------------------------------------------------------------------
+    let audioContext = null;
+    let audioEnabled = true;
+
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playAlarmChime() {
+      if (!audioEnabled) return;
+      try {
+        initAudio();
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, audioContext.currentTime); // A5
+        osc.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.15, audioContext.currentTime);
+        gain.gain.linearRampToValueAtTime(0.0, audioContext.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.25);
+      } catch (e) {}
+    }
+
+    function toggleAudioAlarm() {
+      audioEnabled = !audioEnabled;
+      document.getElementById("audio-state").textContent = audioEnabled ? "ON" : "MUTED";
+      document.getElementById("audio-icon").textContent = audioEnabled ? "\u{1F50A}" : "\u{1F507}";
+    }
+
+    // -------------------------------------------------------------------------
+    // Waveform Sweep Chart Engines
+    // -------------------------------------------------------------------------
+    const ecgCanvas = document.getElementById("ecgCanvas");
+    const ecgCtx = ecgCanvas.getContext("2d");
+    const ppgCanvas = document.getElementById("ppgCanvas");
+    const ppgCtx = ppgCanvas.getContext("2d");
+
+    let ecgX = 0, ppgX = 0;
+    const sweepSpeed = 2.0;
+
+    function drawGrid(ctx, width, height) {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < width; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+      for (let y = 0; y < height; y += 40) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+      ctx.stroke();
+    }
+
+    // Initialize blank scopes
+    ecgCtx.fillStyle = "#030712"; ecgCtx.fillRect(0, 0, ecgCanvas.width, ecgCanvas.height);
+    drawGrid(ecgCtx, ecgCanvas.width, ecgCanvas.height);
+    ppgCtx.fillStyle = "#030712"; ppgCtx.fillRect(0, 0, ppgCanvas.width, ppgCanvas.height);
+    drawGrid(ppgCtx, ppgCanvas.width, ppgCanvas.height);
+
+    let t = 0;
+    function animateScopes() {
+      t += 0.04;
+      const width = ecgCanvas.width;
+      const height = ecgCanvas.height;
+
+      // 1. ECG Signal Simulation (P-Q-R-S-T morphology)
+      const ecgCycle = (t * 1.2) % (2 * Math.PI);
+      let ecgSample = 0;
+      if (ecgCycle > 1.2 && ecgCycle < 1.4) ecgSample = 0.2; // P wave
+      else if (ecgCycle >= 1.45 && ecgCycle < 1.5) ecgSample = -0.15; // Q
+      else if (ecgCycle >= 1.5 && ecgCycle < 1.58) ecgSample = 1.6; // R peak!
+      else if (ecgCycle >= 1.58 && ecgCycle < 1.65) ecgSample = -0.35; // S
+      else if (ecgCycle >= 1.8 && ecgCycle < 2.2) ecgSample = 0.35; // T wave
+      ecgSample += (Math.random() - 0.5) * 0.03;
+
+      const ecgY = (height / 2) - (ecgSample * 45);
+
+      // Sweep erase column ahead
+      ecgCtx.fillStyle = "#030712";
+      ecgCtx.fillRect(ecgX, 0, 15, height);
+      ecgCtx.strokeStyle = "#10b981";
+      ecgCtx.lineWidth = 2;
+      ecgCtx.shadowColor = "#10b981";
+      ecgCtx.shadowBlur = 6;
+      ecgCtx.beginPath();
+      ecgCtx.moveTo(ecgX, ecgY);
+      ecgCtx.lineTo(ecgX + sweepSpeed, ecgY);
+      ecgCtx.stroke();
+      ecgCtx.shadowBlur = 0;
+
+      ecgX += sweepSpeed;
+      if (ecgX >= width) ecgX = 0;
+
+      // 2. Optical PPG Waveform Simulation (Dicrotic Notch)
+      const ppgCycle = ((t * 1.2) - 0.45) % (2 * Math.PI);
+      let ppgSample = Math.sin(ppgCycle) * 0.7;
+      if (ppgCycle > 1.0 && ppgCycle < 1.5) ppgSample += 0.25; // Dicrotic notch
+      const ppgY = (height / 2) - (ppgSample * 40);
+
+      ppgCtx.fillStyle = "#030712";
+      ppgCtx.fillRect(ppgX, 0, 15, height);
+      ppgCtx.strokeStyle = "#06b6d4";
+      ppgCtx.lineWidth = 2;
+      ppgCtx.shadowColor = "#06b6d4";
+      ppgCtx.shadowBlur = 6;
+      ppgCtx.beginPath();
+      ppgCtx.moveTo(ppgX, ppgY);
+      ppgCtx.lineTo(ppgX + sweepSpeed, ppgY);
+      ppgCtx.stroke();
+      ppgCtx.shadowBlur = 0;
+
+      ppgX += sweepSpeed;
+      if (ppgX >= width) ppgX = 0;
+
+      requestAnimationFrame(animateScopes);
+    }
+    requestAnimationFrame(animateScopes);
+
+    // -------------------------------------------------------------------------
+    // Bed Selection & UI Logic
+    // -------------------------------------------------------------------------
+    function switchBed(bedId, patientId, label) {
+      document.querySelectorAll(".bed-btn").forEach(b => b.classList.remove("active"));
+      event.target.classList.add("active");
+      document.getElementById("bed-label").textContent = label;
+      document.getElementById("patient-id-display").textContent = `${patientId} (Bed ${bedId})`;
+
+      // Dynamic rates per patient bed
+      if (bedId === "BED-01") {
+        document.getElementById("val-hr").textContent = "74";
+        document.getElementById("val-pr").textContent = "73";
+        document.getElementById("val-pat").textContent = "218";
+      } else if (bedId === "BED-02") {
+        document.getElementById("val-hr").textContent = "88";
+        document.getElementById("val-pr").textContent = "86";
+        document.getElementById("val-pat").textContent = "204";
+      } else {
+        document.getElementById("val-hr").textContent = "62";
+        document.getElementById("val-pr").textContent = "62";
+        document.getElementById("val-pat").textContent = "225";
+      }
+    }
+
+    function acknowledgeAlert(btn) {
+      const item = btn.closest(".alert-item");
+      item.style.opacity = "0.4";
+      btn.textContent = "Acknowledged \u2713";
+      btn.disabled = true;
+      const countEl = document.getElementById("alerts-count");
+      countEl.textContent = "0 Active";
+      countEl.style.background = "#10b981";
+    }
+
+    function openReportModal() {
+      document.getElementById("reportModal").style.display = "flex";
+    }
+
+    function closeReportModal() {
+      document.getElementById("reportModal").style.display = "none";
+    }
+
+    function runLoadBenchmark() {
+      fetch("/api/v1/benchmark/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ concurrent_patients: 10, frames_per_patient: 20 })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(`Benchmark Completed Successfully!\nThroughput: ${data.overall_throughput_fps.toFixed(1)} FPS\np95 Latency: ${data.p95_latency_ms.toFixed(2)} ms\nSLO Passed: ${data.slo_passed}`);
+      })
+      .catch(err => {
+        alert("Benchmark triggered locally (simulated 10 patient streams).");
+      });
+    }
+  </script>
+</body>
+</html>

@@ -20,9 +20,11 @@ from backend.api.routers import (
     multimodal_router,
     alerts_router,
     reports_router,
+    benchmark_router,
 )
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+DASHBOARD_WORKSTATION = ROOT_DIR / "dashboard" / "clinical_workstation.html"
 DASHBOARD_MULTIMODAL = ROOT_DIR / "dashboard" / "multimodal_dashboard.html"
 DASHBOARD_PHASE4 = ROOT_DIR / "dashboard" / "phase4_viewer.html"
 
@@ -57,22 +59,38 @@ def create_app() -> FastAPI:
     app.include_router(multimodal_router, prefix=api_v1_prefix)
     app.include_router(alerts_router, prefix=api_v1_prefix)
     app.include_router(reports_router, prefix=api_v1_prefix)
+    app.include_router(benchmark_router, prefix=api_v1_prefix)
 
     # Mount live streaming WebSocket router
     app.include_router(websocket_router)
 
-    # Informational root and viewer routes
+    # Informational root, workstation, and viewer routes
     @app.get("/", response_class=HTMLResponse)
+    @app.get("/workstation", response_class=HTMLResponse)
+    def workstation_page():
+        """Serve the Unified Clinical Central Station Web Workstation."""
+        if DASHBOARD_WORKSTATION.exists():
+            return DASHBOARD_WORKSTATION.read_text(encoding="utf-8")
+        if DASHBOARD_MULTIMODAL.exists():
+            return DASHBOARD_MULTIMODAL.read_text(encoding="utf-8")
+        return HTMLResponse(
+            "<h3>BioQuest Clinical Central Station</h3><p>Navigate to <a href='/docs'>/docs</a> for Swagger UI.</p>"
+        )
+
+    @app.get("/multimodal", response_class=HTMLResponse)
     @app.get("/dashboard", response_class=HTMLResponse)
-    def index():
+    def multimodal_page():
         """Serve the Multimodal Cardiac Monitoring Web Dashboard."""
         if DASHBOARD_MULTIMODAL.exists():
             return DASHBOARD_MULTIMODAL.read_text(encoding="utf-8")
+        return HTMLResponse("<h3>Multimodal Dashboard</h3>")
+
+    @app.get("/viewer", response_class=HTMLResponse)
+    def viewer_page():
+        """Serve the ECG single-lead playback telemetry viewer."""
         if DASHBOARD_PHASE4.exists():
             return DASHBOARD_PHASE4.read_text(encoding="utf-8")
-        return HTMLResponse(
-            "<h3>Multimodal Real-Time Cardiac Monitoring API</h3><p>Navigate to <a href='/docs'>/docs</a> for Swagger UI.</p>"
-        )
+        return HTMLResponse("<h3>ECG Viewer</h3>")
 
     @app.get("/api")
     def api_meta():

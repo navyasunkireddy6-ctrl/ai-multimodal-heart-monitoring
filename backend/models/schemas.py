@@ -471,4 +471,54 @@ class ClinicalReportGenerateRequest(BaseModel):
     patient_notes: Optional[str] = Field(None, description="Optional clinician or subject notes")
 
 
+# ============================================================================
+# Phase 13: High-Concurrency Multi-Patient Stress & Benchmarking Schemas
+# ============================================================================
+
+class PatientStreamMetrics(BaseModel):
+    """Per-patient telemetry performance metrics."""
+    patient_id: str = Field(..., description="Unique simulated patient identifier")
+    frames_sent: int = Field(..., description="Count of outbound frames dispatched")
+    frames_received: int = Field(..., description="Count of inbound acknowledgments received")
+    packet_loss_rate: float = Field(0.0, description="Fraction of frames dropped [0.0, 1.0]")
+    mean_latency_ms: float = Field(..., description="Average processing round-trip latency in ms")
+    p95_latency_ms: float = Field(..., description="95th percentile latency in ms")
+    jitter_ms: float = Field(..., description="Standard deviation of inter-frame latency in ms")
+    fps: float = Field(..., description="Observed effective throughput in frames/sec")
+
+
+class ConcurrencyBenchmarkRequest(BaseModel):
+    """Request payload to initiate a multi-patient load benchmark."""
+    concurrent_patients: int = Field(10, description="Number of concurrent patient streams", ge=1, le=50)
+    frames_per_patient: int = Field(30, description="Frames transmitted per patient stream", ge=5, le=500)
+    target_fps: float = Field(30.0, description="Target frame transmission frequency", ge=1.0, le=100.0)
+    mode: ModeEnum = Field(ModeEnum.SMARTPHONE_PPG, description="Simulation modality")
+
+
+class ConcurrencyBenchmarkResult(BaseModel):
+    """Consolidated stress testing performance scorecard."""
+    model_config = ConfigDict(use_enum_values=True)
+
+    benchmark_id: str = Field(..., description="Unique benchmark execution identifier")
+    timestamp: str = Field(..., description="ISO-8601 execution timestamp")
+    concurrent_patients: int = Field(..., description="Total simultaneous patient streams")
+    total_frames_processed: int = Field(..., description="Total telemetry frames ingested and processed")
+    total_duration_seconds: float = Field(..., description="Elapsed wall-clock benchmark duration in seconds")
+    overall_throughput_fps: float = Field(..., description="Aggregate system frame throughput in FPS")
+    p50_latency_ms: float = Field(..., description="Median frame processing latency in ms")
+    p95_latency_ms: float = Field(..., description="95th percentile latency in ms")
+    p99_latency_ms: float = Field(..., description="99th percentile latency in ms")
+    max_latency_ms: float = Field(..., description="Maximum single-frame latency in ms")
+    mean_jitter_ms: float = Field(..., description="Average stream jitter across all clients in ms")
+    overall_packet_loss_pct: float = Field(0.0, description="Aggregate dropped frame percentage")
+    slo_passed: bool = Field(..., description="True if all clinical latency and throughput SLOs passed")
+    slo_details: Dict[str, bool] = Field(default_factory=dict, description="Status of individual SLO assertions")
+    patient_metrics: List[PatientStreamMetrics] = Field(default_factory=list, description="Per-patient breakdown")
+    disclaimer: str = Field(
+        "Research prototype — not intended for medical diagnosis.",
+        description="Mandatory medical disclaimer"
+    )
+
+
+
 
