@@ -9,6 +9,7 @@ from backend.api.routers.playback import router as playback_router
 from backend.api.routers.websocket import router as websocket_router
 from backend.api.routers.multimodal import router as multimodal_router
 from backend.api.routers.alerts import router as alerts_router
+from backend.api.routers.reports import router as reports_router
 
 __all__ = [
     "health_router",
@@ -20,4 +21,5 @@ __all__ = [
     "websocket_router",
     "multimodal_router",
     "alerts_router",
+    "reports_router",
 ]

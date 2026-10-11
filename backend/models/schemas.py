@@ -412,3 +412,63 @@ class AlertAcknowledgeResponse(BaseModel):
     message: str
 
 
+# ============================================================================
+# Phase 12: Automated Clinical Diagnostic Report Schemas
+# ============================================================================
+
+class ClinicalReportSummary(BaseModel):
+    """Standardized clinical summary of a cardiac monitoring session."""
+    model_config = ConfigDict(use_enum_values=True)
+
+    report_id: str = Field(..., description="Unique UUID for this clinical report")
+    session_id: str = Field(..., description="Referenced monitoring session UUID")
+    generated_at: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="ISO-8601 report compilation timestamp"
+    )
+    mode: str = Field(..., description="Primary telemetry modality")
+    duration_seconds: float = Field(..., description="Total observation duration in seconds")
+    total_measurements: int = Field(..., description="Total sampled cardiac measurement entries")
+
+    # Heart Rate & Pulse Rate Statistics
+    mean_heart_rate_bpm: Optional[float] = Field(None, description="Average ECG heart rate in BPM")
+    min_heart_rate_bpm: Optional[float] = Field(None, description="Minimum ECG heart rate in BPM")
+    max_heart_rate_bpm: Optional[float] = Field(None, description="Maximum ECG heart rate in BPM")
+    mean_pulse_rate_bpm: Optional[float] = Field(None, description="Average PPG pulse rate in BPM")
+    min_pulse_rate_bpm: Optional[float] = Field(None, description="Minimum PPG pulse rate in BPM")
+    max_pulse_rate_bpm: Optional[float] = Field(None, description="Maximum PPG pulse rate in BPM")
+
+    # Vascular & Multimodal Transit Dynamics
+    mean_pulse_arrival_time_ms: Optional[float] = Field(None, description="Average arterial transit latency (PAT)")
+    pulse_deficit_episodes: int = Field(0, description="Detected episodes of non-perfusing pulse deficit")
+
+    # Arrhythmia & Morphological Breakdown
+    rhythm_distribution: Dict[str, int] = Field(default_factory=dict, description="Beats categorized per rhythm class")
+    dominant_rhythm: Optional[str] = Field("Normal Sinus Rhythm", description="Primary classified cardiac rhythm")
+
+    # Signal Quality Index Statistics
+    quality_distribution: Dict[str, float] = Field(default_factory=dict, description="Percentage of window: GOOD, FAIR, POOR")
+    overall_sqi: float = Field(..., description="Mean signal quality index [0.0, 1.0]")
+
+    # Anomaly Alert Incidents
+    total_alerts: int = Field(0, description="Total anomalous cardiac alerts triggered")
+    critical_alerts_count: int = Field(0, description="Critical life-safety alarms triggered")
+    recent_alerts: List[CardiacAlert] = Field(default_factory=list, description="List of recorded alert events")
+
+    # Clinical Interpretations & Advisory
+    clinical_impressions: List[str] = Field(default_factory=list, description="Automated algorithmic observations")
+    disclaimer: str = Field(
+        "Research prototype — not intended for medical diagnosis.",
+        description="Mandatory medical disclaimer"
+    )
+
+
+class ClinicalReportGenerateRequest(BaseModel):
+    """Payload to synthesize an ad-hoc clinical report from measurements."""
+    session_id: Optional[str] = Field(None, description="Optional associated session ID")
+    mode: ModeEnum = Field(ModeEnum.OFFLINE_DEMO, description="Monitoring mode")
+    measurements: List[CanonicalMeasurement] = Field(..., description="Ordered sequence of canonical measurements")
+    patient_notes: Optional[str] = Field(None, description="Optional clinician or subject notes")
+
+
+

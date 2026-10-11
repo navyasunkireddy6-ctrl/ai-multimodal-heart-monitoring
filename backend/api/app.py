@@ -19,6 +19,7 @@ from backend.api.routers import (
     websocket_router,
     multimodal_router,
     alerts_router,
+    reports_router,
 )
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
@@ -55,6 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(playback_router, prefix=api_v1_prefix)
     app.include_router(multimodal_router, prefix=api_v1_prefix)
     app.include_router(alerts_router, prefix=api_v1_prefix)
+    app.include_router(reports_router, prefix=api_v1_prefix)
 
     # Mount live streaming WebSocket router
     app.include_router(websocket_router)

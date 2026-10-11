@@ -9,10 +9,12 @@ from backend.services.trend_service import TrendService
 from backend.services.session_service import SessionService
 from backend.services.multimodal_service import MultimodalService
 from backend.services.alert_service import AlertService
+from backend.services.report_service import ReportService
 from ml.ecg.playback import ECGPlaybackEngine
 
 _session_service = SessionService()
 _alert_service = AlertService()
+_report_service: Optional[ReportService] = None
 _ecg_service: Optional[ECGService] = None
 _ppg_service: Optional[PPGService] = None
 _trend_service: Optional[TrendService] = None
@@ -28,6 +30,17 @@ def get_session_service() -> SessionService:
 def get_alert_service() -> AlertService:
     """Return the global AlertService instance."""
     return _alert_service
+
+
+def get_report_service() -> ReportService:
+    """Return or initialize the global ReportService instance."""
+    global _report_service
+    if _report_service is None:
+        _report_service = ReportService(
+            session_service=_session_service,
+            alert_service=_alert_service,
+        )
+    return _report_service
 
 
 def get_ecg_service() -> ECGService:

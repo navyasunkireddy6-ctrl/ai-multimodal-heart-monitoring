@@ -319,3 +319,60 @@ Base path: `/api/v1/alerts`
 - **Get Alert Config**: `GET /api/v1/alerts/config`
 - **Update Alert Config**: `PUT /api/v1/alerts/config`
 
+---
+
+## 6. Phase 12 Automated Clinical Diagnostic Reports
+
+Base path: `/api/v1/reports`
+
+### 6.1 Report Summary Data Model (`ClinicalReportSummary`)
+```json
+{
+  "report_id": "861d8bd0-9781-4f13-b81b-f93d32eef703",
+  "session_id": "18f76de8-e6b1-4653-8cfb-a1bc40ee6161",
+  "generated_at": "2026-10-11T17:16:15.371Z",
+  "mode": "offline_demo",
+  "duration_seconds": 29.0,
+  "total_measurements": 30,
+  "mean_heart_rate_bpm": 85.2,
+  "min_heart_rate_bpm": 72.0,
+  "max_heart_rate_bpm": 115.5,
+  "mean_pulse_rate_bpm": 84.2,
+  "min_pulse_rate_bpm": 72.5,
+  "max_pulse_rate_bpm": 115.7,
+  "mean_pulse_arrival_time_ms": 218.4,
+  "pulse_deficit_episodes": 0,
+  "rhythm_distribution": {
+    "Normal Sinus Rhythm": 24,
+    "Premature Ventricular Contraction": 6
+  },
+  "dominant_rhythm": "Normal Sinus Rhythm",
+  "quality_distribution": {
+    "GOOD": 80.0,
+    "FAIR": 20.0,
+    "POOR": 0.0
+  },
+  "overall_sqi": 0.916,
+  "total_alerts": 2,
+  "critical_alerts_count": 1,
+  "recent_alerts": [],
+  "clinical_impressions": [
+    "Normal rate: Mean ECG heart rate within normal sinus limits at 85.2 BPM (Range: 72.0–115.5 BPM).",
+    "Transient Tachycardia observed with peak heart rate reaching 115.5 BPM.",
+    "Cardiac ectopy identified: 6 beats (20.0%) classified as non-sinus rhythm.",
+    "High diagnostic reliability: 80.0% of recordings scored GOOD SQI.",
+    "ALERT: 1 critical emergency alarm(s) triggered during monitoring session (Arrhythmia Detected, Tachycardia)."
+  ],
+  "disclaimer": "Research prototype — not intended for medical diagnosis."
+}
+```
+
+### 6.2 Canonical Endpoints
+- **Get Session Report Summary**: `GET /api/v1/reports/{session_id}/summary?patient_notes={optional}`
+  - Returns structured `ClinicalReportSummary` containing vital rate aggregates, SQI breakdown, arrhythmia frequencies, emergency incident tallies, and automated impressions.
+- **Get Session Printable HTML Report**: `GET /api/v1/reports/{session_id}/html?patient_notes={optional}`
+  - Returns a self-contained, publication-ready HTML diagnostic document with responsive styling, clinical tables, and `@media print` layout formatting.
+- **Synthesize Ad-Hoc Report**: `POST /api/v1/reports/generate`
+  - Accepts a payload with `measurements: List[CanonicalMeasurement]` and optional `patient_notes`, returning a synthesized `ClinicalReportSummary` without requiring an existing persisted session.
+
+

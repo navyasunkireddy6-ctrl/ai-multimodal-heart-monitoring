@@ -30,6 +30,8 @@ from backend.models.schemas import (
     AlertConfig,
     AlertListResponse,
     AlertAcknowledgeResponse,
+    ClinicalReportSummary,
+    ClinicalReportGenerateRequest,
 )
 
 __all__ = [
@@ -62,4 +64,6 @@ __all__ = [
     "AlertConfig",
     "AlertListResponse",
     "AlertAcknowledgeResponse",
+    "ClinicalReportSummary",
+    "ClinicalReportGenerateRequest",
 ]

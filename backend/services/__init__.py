@@ -6,6 +6,7 @@ from backend.services.trend_service import TrendService
 from backend.services.session_service import SessionService
 from backend.services.multimodal_service import MultimodalService
 from backend.services.alert_service import AlertService
+from backend.services.report_service import ReportService
 
 __all__ = [
     "ECGService",
@@ -14,4 +15,5 @@ __all__ = [
     "SessionService",
     "MultimodalService",
     "AlertService",
+    "ReportService",
 ]

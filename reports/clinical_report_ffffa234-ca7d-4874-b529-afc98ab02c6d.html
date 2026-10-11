@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BioQuest Clinical Diagnostic Report — 6811cbbe</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            color: #1e293b;
+            margin: 0;
+            padding: 40px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+        .brand-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0284c7;
+            letter-spacing: -0.5px;
+        }
+        .report-meta {
+            text-align: right;
+            font-size: 12px;
+            color: #64748b;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 600;
+        }
+        .stat-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 4px;
+        }
+        .med-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+        .med-table th, .med-table td {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+        .med-table th {
+            background: #f1f5f9;
+            font-weight: 600;
+            color: #475569;
+        }
+        .impressions-box {
+            background: #f8fafc;
+            border-left: 4px solid #0284c7;
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 24px;
+        }
+        .impressions-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+            color: #0f172a;
+        }
+        .disclaimer-footer {
+            margin-top: 40px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 14px;
+            font-size: 11px;
+            color: #ef4444;
+            text-align: center;
+            font-weight: 600;
+        }
+        @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        <div>
+            <div class="brand-title">BioQuest Multimodal Cardiac Telemetry</div>
+            <div style="color:#64748b; font-size:13px; margin-top:2px;">Automated Clinical Physiological Assessment Report</div>
+        </div>
+        <div class="report-meta">
+            <div>Report ID: <strong>6811cbbe</strong></div>
+            <div>Session ID: <strong>ffffa234</strong></div>
+            <div>Date: <strong>2026-10-11 17:17:12 UTC</strong></div>
+            <div>Modality: <span class="badge">OFFLINE_DEMO</span></div>
+        </div>
+    </div>
+
+    <div class="grid-stats">
+        <div class="stat-card">
+            <div class="stat-label">Mean ECG Heart Rate</div>
+            <div class="stat-val">85.2 BPM</div>
+            <div style="font-size:11px; color:#64748b;">Range: 72.0 – 115.5</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Mean Optical Pulse Rate</div>
+            <div class="stat-val">84.2 BPM</div>
+            <div style="font-size:11px; color:#64748b;">Range: 72.5 – 115.7</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Dominant Rhythm</div>
+            <div class="stat-val" style="font-size:16px; margin-top:8px; color:#0284c7;">Normal Sinus Rhythm</div>
+            <div style="font-size:11px; color:#64748b;">Duration: 29.0s (30 frames)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Signal Quality Index (SQI)</div>
+            <div class="stat-val" style="color:#10b981;">0.92</div>
+            <div style="font-size:11px; color:#64748b;">GOOD: 80.0% | POOR: 0.0%</div>
+        </div>
+    </div>
+
+    <div class="impressions-box">
+        <h3>Algorithmic Diagnostic Observations & Impressions</h3>
+        <ul><li>Normal rate: Mean ECG heart rate within normal sinus limits at 85.2 BPM (Range: 72.0–115.5 BPM).</li><li>Transient Tachycardia observed with peak heart rate reaching 115.5 BPM.</li><li>Cardiac ectopy identified: 6 beats (20.0%) classified as non-sinus rhythm (Normal Sinus Rhythm).</li><li>High diagnostic reliability: 80.0% of recordings scored GOOD SQI.</li><li>ALERT: 1 critical emergency alarm(s) triggered during monitoring session (Arrhythmia Detected, Tachycardia).</li></ul>
+    </div>
+
+    <h3>Rhythm & Beat Morphology Distribution</h3>
+    <table class="med-table">
+        <thead>
+            <tr><th>Classified Rhythm</th><th style="text-align:right;">Beat Count</th><th style="text-align:right;">Proportion (%)</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Normal Sinus Rhythm</td><td style='text-align:right;'>24</td><td style='text-align:right;'>80.0%</td></tr><tr><td>Premature Ventricular Contraction</td><td style='text-align:right;'>6</td><td style='text-align:right;'>20.0%</td></tr>
+        </tbody>
+    </table>
+
+    <h3>Recorded Cardiac Alerts</h3><table class='med-table'><thead><tr><th>Time</th><th>Severity</th><th>Event</th><th>Message</th></tr></thead><tbody><tr><td>17:17:05</td><td style='color:#f59e0b; font-weight:bold;'>WARNING</td><td>TACHYCARDIA</td><td>Transient Tachycardia observed with peak rate 115.5 BPM</td></tr><tr><td>17:16:59</td><td style='color:#ef4444; font-weight:bold;'>CRITICAL</td><td>ARRHYTHMIA_DETECTED</td><td>Premature Ventricular Contraction detected (91% confidence)</td></tr></tbody></table>
+
+    <div class="disclaimer-footer">
+        Research prototype — not intended for medical diagnosis.
+    </div>
+</body>
+</html>
