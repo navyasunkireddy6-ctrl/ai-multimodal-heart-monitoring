@@ -1,6 +1,6 @@
-"""Master Orchestrator: Executes All 12 Phases of BioQuest End-to-End.
+"""Master Orchestrator: Executes All 15 Phases of BioQuest End-to-End.
 
-Runs all 12 system phases in sequence:
+Runs all 15 system phases in sequence:
   Phase 1:  Environment & Canonical API Contract
   Phase 2:  ECG Signal Processing & Pan-Tompkins R-Peak Detection
   Phase 3:  MIT-BIH Arrhythmia Dataset & Streaming Playback Engine
@@ -15,6 +15,7 @@ Runs all 12 system phases in sequence:
   Phase 12: Automated Clinical Diagnostic Report Generation & Analytics Export
   Phase 13: High-Concurrency Multi-Patient Stress & Performance Benchmarking
   Phase 14: Unified Clinical Central Station Web Workstation & Production Deployment
+  Phase 15: Clinical Audit Compliance, Cryptographic Integrity & System Diagnostics
 
 Usage:
     python scripts/run_all_phases.py
@@ -128,6 +129,12 @@ PHASES: List[PhaseTask] = [
         name="Clinical Central Station & Production Deployment",
         command=[sys.executable, "scripts/demo_clinical_workstation.py"],
         description="Dual canvas sweep strip charts, bed selector, alert triage, report modal, and Docker deployment.",
+    ),
+    PhaseTask(
+        phase_num=15,
+        name="Clinical Audit, Integrity & Diagnostics",
+        command=[sys.executable, "scripts/demo_audit_compliance.py"],
+        description="Tamper-evident SHA-256 session integrity manifests, deep subsystem diagnostics, and regulatory compliance.",
     ),
 ]
 

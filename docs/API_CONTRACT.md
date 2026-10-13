@@ -428,5 +428,147 @@ Base path: `/api/v1/benchmark`
 - **Get Benchmark HTML Dashboard**: `GET /api/v1/benchmark/html`
   - Returns publication-quality standalone HTML dashboard with styling, tables, and SLO badge.
 
+---
+
+## 8. Phase 14 Unified Clinical Central Station & Production Deployment
+
+Workstation URL: `/workstation` and root `/`
+
+### 8.1 Clinical Workstation Endpoints
+- **Serve Workstation**: `GET /workstation` and `GET /`
+  - Returns responsive HTML5 clinical monitoring dashboard featuring dual-canvas sweep strip charts (ECG @ 250 Hz, PPG @ 30 Hz), bedside patient triage selector (ICU, Telemetry, PACU), Web Audio API emergency chimes, and diagnostic report modal.
+- **Auxiliary Telemetry Dashboards**:
+  - `GET /multimodal`: Multimodal synchronization & PAT diagnostic dashboard.
+  - `GET /viewer`: Single-lead ECG real-time playback viewer.
+- **Platform Metadata Discovery**: `GET /api`
+  - Returns JSON platform metadata including service name, version, and canonical endpoints count.
+
+### 8.2 Production Containerization Stack
+- **Dockerfile**: Multi-stage Python 3.14-slim container with non-root security user (`appuser`), pinned dependencies, and internal health check probe (`/api/v1/health`).
+- **Compose Stack (`docker-compose.yml`)**: Production orchestration mapping port 8000, configuring restart policies, and mounting persistent SQLite telemetry volume (`/data`).
+
+---
+
+## 9. Phase 15 Clinical Audit Compliance, Cryptographic Integrity & System Diagnostics
+
+Base path: `/api/v1/audit`
+
+### 9.1 Data Models
+
+#### 9.1.1 Cryptographic Audit Manifest (`AuditIntegrityManifest`)
+```json
+{
+  "session_id": "fd64c836-83d9-4d3f-b653-672419c0f00a",
+  "generated_at": "2026-10-13T16:49:12.894Z",
+  "measurement_count": 10,
+  "sha256_checksum": "f7ee4ee2516c1c8ba470269f1edb9f83ef343bcec904e7726df57db2bf1c6b6c",
+  "tamper_verified": true,
+  "algorithm": "SHA-256",
+  "record_hash": "0b62aa080e5da6124744d0cd5a2fde944512...",
+  "disclaimer": "Research prototype — not intended for medical diagnosis."
+}
+```
+
+#### 9.1.2 Deep System Diagnostics (`SystemDiagnosticsResponse`)
+```json
+{
+  "timestamp": "2026-10-13T16:49:13.120Z",
+  "system_status": "ALL_SYSTEMS_OPERATIONAL",
+  "subsystems": [
+    {
+      "subsystem": "ECG_Pan_Tompkins_Engine",
+      "status": "OPERATIONAL",
+      "latency_ms": 6.36,
+      "details": { "sampling_rate_hz": 360.0, "pan_tompkins_filter": "healthy", "passband": "0.5-40Hz" }
+    },
+    {
+      "subsystem": "PPG_Optical_Processor",
+      "status": "OPERATIONAL",
+      "latency_ms": 2.12,
+      "details": { "optical_green_filter": "healthy", "peak_detector": "active", "passband": "0.5-5.0Hz" }
+    },
+    {
+      "subsystem": "Arrhythmia_Classifier_Model",
+      "status": "OPERATIONAL",
+      "latency_ms": 0.01,
+      "details": { "model_loaded": true, "target_classes": 4, "engine": "RandomForest/Scikit-Learn" }
+    },
+    {
+      "subsystem": "Trend_Forecasting_Engine",
+      "status": "OPERATIONAL",
+      "latency_ms": 0.24,
+      "details": { "regression_engine": "linear_slope", "sample_trend": "INCREASING" }
+    },
+    {
+      "subsystem": "Multimodal_Fusion_Synchronizer",
+      "status": "OPERATIONAL",
+      "latency_ms": 0.0,
+      "details": { "pat_estimator": "healthy", "pulse_deficit_monitor": "active", "synchronizer": "locked" }
+    },
+    {
+      "subsystem": "Emergency_Alerts_Engine",
+      "status": "OPERATIONAL",
+      "latency_ms": 0.0,
+      "details": { "tachycardia_threshold": 100.0, "active_alerts": 0 }
+    },
+    {
+      "subsystem": "Clinical_Reporting_Engine",
+      "status": "OPERATIONAL",
+      "latency_ms": 0.0,
+      "details": { "html_renderer": "ready", "statistical_aggregator": "ready", "export_targets": ["HTML", "JSON"] }
+    },
+    {
+      "subsystem": "Concurrency_Benchmark_Engine",
+      "status": "OPERATIONAL",
+      "latency_ms": 0.0,
+      "details": { "slo_p95_threshold_ms": 50.0, "simulation_concurrency_max": 50 }
+    },
+    {
+      "subsystem": "Session_Storage_Engine",
+      "status": "OPERATIONAL",
+      "latency_ms": 0.05,
+      "details": { "storage_backend": "in_memory_sqlite", "accessible": true }
+    },
+    {
+      "subsystem": "Cryptographic_Audit_Integrity",
+      "status": "OPERATIONAL",
+      "latency_ms": 0.02,
+      "details": { "algorithm": "SHA-256", "hmac_enabled": true, "digest_len": 64 }
+    }
+  ],
+  "active_sessions": 1,
+  "total_alerts_recorded": 0,
+  "uptime_seconds": 12.4,
+  "disclaimer": "Research prototype — not intended for medical diagnosis."
+}
+```
+
+#### 9.1.3 Regulatory Compliance Framework (`ComplianceStatementResponse`)
+```json
+{
+  "standards_referenced": [
+    "IEC 62304 Medical Device Software Life Cycle (Reference)",
+    "ISO 13485 Quality Management (Research Framework)",
+    "AAMI EC13 Cardiac Monitor Safety Standards (Reference)",
+    "HIPAA Security Rule Audit Trail Guidelines (Reference)"
+  ],
+  "data_integrity": "SHA-256 Cryptographic Digest Verification Enabled",
+  "regulatory_classification": "Software Research Prototype (Non-Clinical / Investigational Use Only)",
+  "audit_logging_enabled": true,
+  "disclaimer": "Research prototype — not intended for medical diagnosis."
+}
+```
+
+### 9.2 Canonical Endpoints
+- **Get Session Cryptographic Audit Manifest**: `GET /api/v1/audit/integrity/{session_id}`
+  - Computes and returns deterministic SHA-256 digest and HMAC composite seal for the session's recorded telemetry.
+- **Run Deep Multi-Subsystem Health Diagnostics**: `GET /api/v1/audit/system-diagnostics`
+  - Probes all 10 core system modules, returning individual operational status, execution latency, and metadata.
+- **Get Regulatory Research Compliance Framework**: `GET /api/v1/audit/compliance`
+  - Returns formal research compliance metadata, referenced standards, and audit trail guarantees.
+- **Get Standalone HTML Diagnostics Dashboard**: `GET /api/v1/audit/html`
+  - Serves publication-quality interactive HTML audit dashboard with health badges, subsystem metrics, and compliance certificates.
+
+
 
 

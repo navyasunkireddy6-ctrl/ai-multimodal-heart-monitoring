@@ -625,6 +625,12 @@
           <button class="action-btn" onclick="window.open('/api/v1/benchmark/html', '_blank')" style="width:100%; justify-content:center;">
             &#x1F4CA; View Benchmark Dashboard
           </button>
+          <button class="action-btn" onclick="openAuditModal()" style="width:100%; justify-content:center;">
+            &#x1F6E1; Clinical Audit &amp; Diagnostics
+          </button>
+          <button class="action-btn" onclick="window.open('/api/v1/audit/html', '_blank')" style="width:100%; justify-content:center;">
+            &#x1F50E; Deep Diagnostics Dashboard
+          </button>
         </div>
       </div>
     </aside>
@@ -656,6 +662,36 @@
       <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--panel-border); padding-top:12px;">
         <button class="action-btn" onclick="closeReportModal()">Close</button>
         <button class="action-btn btn-primary" onclick="window.print()">&#x1F5A8; Print Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clinical Audit & Deep Diagnostics Modal -->
+  <div class="modal-backdrop" id="auditModal">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title">&#x1F6E1; Clinical Audit Compliance &amp; System Diagnostics</div>
+        <button class="close-btn" onclick="closeAuditModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="auditBody">
+        <div class="report-stat-row">
+          <div><span style="color:#94a3b8; font-size:0.75rem;">SYSTEM STATUS</span><br><strong id="aud-status" style="font-size:1.05rem; color:#10b981;">OPERATIONAL</strong></div>
+          <div><span style="color:#94a3b8; font-size:0.75rem;">INTEGRITY SEAL</span><br><strong id="aud-seal" style="font-size:1.05rem; color:#38bdf8;">SHA-256 HMAC</strong></div>
+          <div><span style="color:#94a3b8; font-size:0.75rem;">SUBSYSTEMS</span><br><strong id="aud-count" style="font-size:1.05rem; color:#f8fafc;">10 / 10 ONLINE</strong></div>
+        </div>
+        <div>
+          <h4 style="font-size:0.85rem; color:#94a3b8; text-transform:uppercase; margin-bottom:6px;">Live Subsystem Health Probes</h4>
+          <div id="aud-subsystems" style="font-size:0.8rem; display:flex; flex-direction:column; gap:6px; max-height:180px; overflow-y:auto;">
+            <div style="color:#cbd5e1;">Loading live diagnostics probes...</div>
+          </div>
+        </div>
+        <div style="background:#0f172a; padding:12px; border-radius:8px; font-size:0.75rem; color:#94a3b8;">
+          <strong style="color:#38bdf8;">Regulatory Standards Framework:</strong> IEC 62304 Medical Device Software Life Cycle, ISO 13485 Quality Management, AAMI EC13 Safety, HIPAA Security Rule Audit Trail.
+        </div>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--panel-border); padding-top:12px;">
+        <button class="action-btn" onclick="closeAuditModal()">Close</button>
+        <button class="action-btn btn-primary" onclick="window.open('/api/v1/audit/html', '_blank')">&#x29C9; Full Audit Report</button>
       </div>
     </div>
   </div>
@@ -823,6 +859,30 @@
 
     function closeReportModal() {
       document.getElementById("reportModal").style.display = "none";
+    }
+
+    function openAuditModal() {
+      document.getElementById("auditModal").style.display = "flex";
+      fetch("/api/v1/audit/system-diagnostics")
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("aud-status").textContent = data.system_status;
+          document.getElementById("aud-count").textContent = `${data.subsystems.length} / ${data.subsystems.length} ONLINE`;
+          const container = document.getElementById("aud-subsystems");
+          container.innerHTML = data.subsystems.map(s => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(30,41,59,0.5); padding:6px 10px; border-radius:4px;">
+              <span style="font-family:monospace; color:#38bdf8;">${s.subsystem}</span>
+              <span style="color:#10b981; font-weight:600;">${s.status} (${s.latency_ms.toFixed(1)} ms)</span>
+            </div>
+          `).join("");
+        })
+        .catch(() => {
+          document.getElementById("aud-subsystems").innerHTML = "<div style='color:#ef4444;'>Failed to retrieve live diagnostics.</div>";
+        });
+    }
+
+    function closeAuditModal() {
+      document.getElementById("auditModal").style.display = "none";
     }
 
     function runLoadBenchmark() {

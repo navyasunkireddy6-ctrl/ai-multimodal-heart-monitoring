@@ -11,12 +11,14 @@ from backend.services.multimodal_service import MultimodalService
 from backend.services.alert_service import AlertService
 from backend.services.report_service import ReportService
 from backend.services.benchmark_service import BenchmarkService
+from backend.services.audit_service import AuditService
 from ml.ecg.playback import ECGPlaybackEngine
 
 _session_service = SessionService()
 _alert_service = AlertService()
 _report_service: Optional[ReportService] = None
 _benchmark_service: Optional[BenchmarkService] = None
+_audit_service: Optional[AuditService] = None
 _ecg_service: Optional[ECGService] = None
 _ppg_service: Optional[PPGService] = None
 _trend_service: Optional[TrendService] = None
@@ -95,3 +97,20 @@ def get_benchmark_service() -> BenchmarkService:
     if _benchmark_service is None:
         _benchmark_service = BenchmarkService()
     return _benchmark_service
+
+
+def get_audit_service() -> AuditService:
+    """Return or initialize the global AuditService instance."""
+    global _audit_service
+    if _audit_service is None:
+        _audit_service = AuditService(
+            session_service=_session_service,
+            alert_service=_alert_service,
+            ecg_service=get_ecg_service(),
+            ppg_service=get_ppg_service(),
+            trend_service=get_trend_service(),
+            multimodal_service=get_multimodal_service(),
+            report_service=get_report_service(),
+            benchmark_service=get_benchmark_service(),
+        )
+    return _audit_service

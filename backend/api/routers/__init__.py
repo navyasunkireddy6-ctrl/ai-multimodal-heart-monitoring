@@ -11,6 +11,7 @@ from backend.api.routers.multimodal import router as multimodal_router
 from backend.api.routers.alerts import router as alerts_router
 from backend.api.routers.reports import router as reports_router
 from backend.api.routers.benchmark import router as benchmark_router
+from backend.api.routers.audit import router as audit_router
 
 __all__ = [
     "health_router",
@@ -24,4 +25,5 @@ __all__ = [
     "alerts_router",
     "reports_router",
     "benchmark_router",
+    "audit_router",
 ]

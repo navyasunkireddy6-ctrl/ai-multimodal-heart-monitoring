@@ -328,3 +328,110 @@ def test_alert_schemas():
     assert cfg.tachycardia_threshold_bpm == 105.0
     assert cfg.cooldown_seconds == 5.0
 
+
+def test_clinical_report_schemas():
+    """Test Phase 12 ClinicalReportSummary and ClinicalReportGenerateRequest schemas."""
+    from backend.models.schemas import ClinicalReportSummary, ClinicalReportGenerateRequest
+
+    summary = ClinicalReportSummary(
+        report_id="rep-1234",
+        session_id="sess-5678",
+        mode="offline_demo",
+        duration_seconds=30.0,
+        total_measurements=30,
+        mean_heart_rate_bpm=74.5,
+        min_heart_rate_bpm=70.0,
+        max_heart_rate_bpm=82.0,
+        overall_sqi=0.92,
+        dominant_rhythm="Normal Sinus Rhythm",
+        clinical_impressions=["Resting sinus rhythm maintained."],
+    )
+    assert summary.report_id == "rep-1234"
+    assert summary.mean_heart_rate_bpm == 74.5
+    assert summary.overall_sqi == 0.92
+    assert "Research prototype" in summary.disclaimer
+
+    req = ClinicalReportGenerateRequest(
+        measurements=[],
+        patient_notes="Routine check",
+    )
+    assert req.mode == "offline_demo"
+    assert req.patient_notes == "Routine check"
+
+
+def test_concurrency_benchmark_schemas():
+    """Test Phase 13 ConcurrencyBenchmarkRequest and ConcurrencyBenchmarkResult schemas."""
+    from backend.models.schemas import ConcurrencyBenchmarkRequest, ConcurrencyBenchmarkResult
+
+    req = ConcurrencyBenchmarkRequest(
+        concurrent_patients=10,
+        frames_per_patient=30,
+        target_fps=30.0,
+    )
+    assert req.concurrent_patients == 10
+    assert req.frames_per_patient == 30
+
+    res = ConcurrencyBenchmarkResult(
+        benchmark_id="bench-001",
+        timestamp="2026-10-13T12:00:00Z",
+        concurrent_patients=10,
+        total_frames_processed=300,
+        total_duration_seconds=0.85,
+        overall_throughput_fps=350.0,
+        p50_latency_ms=12.5,
+        p95_latency_ms=16.8,
+        p99_latency_ms=19.5,
+        max_latency_ms=22.0,
+        mean_jitter_ms=4.2,
+        overall_packet_loss_pct=0.0,
+        slo_passed=True,
+    )
+    assert res.benchmark_id == "bench-001"
+    assert res.slo_passed is True
+    assert res.overall_throughput_fps == 350.0
+
+
+def test_audit_compliance_schemas():
+    """Test Phase 15 AuditIntegrityManifest, SubsystemDiagnosticStatus, and Compliance schemas."""
+    from backend.models.schemas import (
+        AuditIntegrityManifest,
+        SubsystemDiagnosticStatus,
+        SystemDiagnosticsResponse,
+        ComplianceStatementResponse,
+    )
+
+    manifest = AuditIntegrityManifest(
+        session_id="sess-999",
+        measurement_count=10,
+        sha256_checksum="a" * 64,
+        tamper_verified=True,
+        record_hash="b" * 64,
+    )
+    assert manifest.session_id == "sess-999"
+    assert len(manifest.sha256_checksum) == 64
+    assert manifest.tamper_verified is True
+
+    sub = SubsystemDiagnosticStatus(
+        subsystem="ECG_Pan_Tompkins_Engine",
+        status="OPERATIONAL",
+        latency_ms=1.25,
+        details={"sampling_rate_hz": 250},
+    )
+    assert sub.subsystem == "ECG_Pan_Tompkins_Engine"
+    assert sub.status == "OPERATIONAL"
+
+    diag = SystemDiagnosticsResponse(
+        system_status="ALL_SYSTEMS_OPERATIONAL",
+        subsystems=[sub],
+        active_sessions=1,
+        total_alerts_recorded=0,
+        uptime_seconds=10.5,
+    )
+    assert diag.system_status == "ALL_SYSTEMS_OPERATIONAL"
+    assert len(diag.subsystems) == 1
+
+    comp = ComplianceStatementResponse()
+    assert comp.audit_logging_enabled is True
+    assert any("IEC 62304" in s for s in comp.standards_referenced)
+
+

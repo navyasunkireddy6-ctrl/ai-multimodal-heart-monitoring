@@ -35,6 +35,10 @@ from backend.models.schemas import (
     PatientStreamMetrics,
     ConcurrencyBenchmarkRequest,
     ConcurrencyBenchmarkResult,
+    AuditIntegrityManifest,
+    SubsystemDiagnosticStatus,
+    SystemDiagnosticsResponse,
+    ComplianceStatementResponse,
 )
 
 __all__ = [
@@ -72,4 +76,8 @@ __all__ = [
     "PatientStreamMetrics",
     "ConcurrencyBenchmarkRequest",
     "ConcurrencyBenchmarkResult",
+    "AuditIntegrityManifest",
+    "SubsystemDiagnosticStatus",
+    "SystemDiagnosticsResponse",
+    "ComplianceStatementResponse",
 ]

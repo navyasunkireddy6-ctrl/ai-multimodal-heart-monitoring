@@ -520,5 +520,72 @@ class ConcurrencyBenchmarkResult(BaseModel):
     )
 
 
+# ============================================================================
+# Phase 15: Clinical Audit Compliance, Cryptographic Integrity & Diagnostics
+# ============================================================================
+
+class AuditIntegrityManifest(BaseModel):
+    """Cryptographic audit record verifying tamper-evident telemetry integrity."""
+    session_id: str = Field(..., description="Unique monitoring session UUID")
+    generated_at: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Audit manifest creation timestamp"
+    )
+    measurement_count: int = Field(..., description="Total measurements included in checksum")
+    sha256_checksum: str = Field(..., description="SHA-256 cryptographic hash of canonical sequence")
+    tamper_verified: bool = Field(True, description="True if telemetry hash matches stored sequence")
+    algorithm: str = Field("SHA-256", description="Cryptographic hashing standard")
+    record_hash: str = Field(..., description="HMAC-style composite manifest signature")
+    disclaimer: str = Field(
+        "Research prototype — not intended for medical diagnosis.",
+        description="Mandatory medical disclaimer"
+    )
+
+
+class SubsystemDiagnosticStatus(BaseModel):
+    """Health and responsiveness status for an individual system module."""
+    subsystem: str = Field(..., description="Module name (e.g., ECG, PPG, Fusion, Alerts)")
+    status: str = Field("OPERATIONAL", description="OPERATIONAL, DEGRADED, or OFFLINE")
+    latency_ms: float = Field(..., description="Diagnostic round-trip latency in ms")
+    details: Dict[str, Any] = Field(default_factory=dict, description="Diagnostic telemetry payload")
+
+
+class SystemDiagnosticsResponse(BaseModel):
+    """Comprehensive multi-subsystem diagnostic audit response."""
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Timestamp of diagnostic execution"
+    )
+    system_status: str = Field("ALL_SYSTEMS_OPERATIONAL", description="Overall platform status")
+    subsystems: List[SubsystemDiagnosticStatus] = Field(default_factory=list)
+    active_sessions: int = Field(..., description="Count of persisted monitoring sessions")
+    total_alerts_recorded: int = Field(..., description="Count of alerts registered in engine")
+    uptime_seconds: float = Field(..., description="Estimated service process uptime")
+    disclaimer: str = Field(
+        "Research prototype — not intended for medical diagnosis.",
+        description="Mandatory medical disclaimer"
+    )
+
+
+class ComplianceStatementResponse(BaseModel):
+    """Regulatory research compliance statement and audit trail capabilities."""
+    standards_referenced: List[str] = Field(
+        default_factory=lambda: [
+            "IEC 62304 Medical Device Software Life Cycle (Reference)",
+            "ISO 13485 Quality Management (Research Framework)",
+            "AAMI EC13 Cardiac Monitor Safety Standards (Reference)",
+            "HIPAA Security Rule Audit Trail Guidelines (Reference)",
+        ]
+    )
+    data_integrity: str = Field("SHA-256 Cryptographic Digest Verification Enabled")
+    regulatory_classification: str = Field("Software Research Prototype (Non-Clinical / Investigational Use Only)")
+    audit_logging_enabled: bool = Field(True)
+    disclaimer: str = Field(
+        "Research prototype — not intended for medical diagnosis.",
+        description="Mandatory medical disclaimer"
+    )
+
+
+
 
 

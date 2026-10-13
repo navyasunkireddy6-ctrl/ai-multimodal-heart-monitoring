@@ -1,15 +1,15 @@
 {
-  "benchmark_id": "ff5412a8-20fd-4cf9-b400-d64ac1697182",
-  "timestamp": "2026-10-11T17:49:11.785288+00:00",
+  "benchmark_id": "6dedba27-8b0b-4e1a-990c-ddaaf4c259e8",
+  "timestamp": "2026-10-13T16:54:07.452372+00:00",
   "concurrent_patients": 10,
   "total_frames_processed": 300,
-  "total_duration_seconds": 0.93,
-  "overall_throughput_fps": 321.8,
-  "p50_latency_ms": 14.73,
-  "p95_latency_ms": 16.95,
-  "p99_latency_ms": 19.49,
-  "max_latency_ms": 22.88,
-  "mean_jitter_ms": 3.16,
+  "total_duration_seconds": 0.89,
+  "overall_throughput_fps": 335.2,
+  "p50_latency_ms": 14.63,
+  "p95_latency_ms": 20.05,
+  "p99_latency_ms": 23.06,
+  "max_latency_ms": 27.07,
+  "mean_jitter_ms": 4.33,
   "overall_packet_loss_pct": 0.0,
   "slo_passed": true,
   "slo_details": {
@@ -24,100 +24,100 @@
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 14.49,
-      "p95_latency_ms": 16.69,
-      "jitter_ms": 3.37,
-      "fps": 32.74
+      "mean_latency_ms": 14.29,
+      "p95_latency_ms": 16.76,
+      "jitter_ms": 4.36,
+      "fps": 33.65
     },
     {
       "patient_id": "PT-SIM-002",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 14.5,
-      "p95_latency_ms": 16.7,
-      "jitter_ms": 3.38,
-      "fps": 32.73
+      "mean_latency_ms": 14.34,
+      "p95_latency_ms": 16.76,
+      "jitter_ms": 4.39,
+      "fps": 33.62
     },
     {
       "patient_id": "PT-SIM-003",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 14.48,
-      "p95_latency_ms": 16.69,
-      "jitter_ms": 3.39,
-      "fps": 32.72
+      "mean_latency_ms": 14.68,
+      "p95_latency_ms": 19.99,
+      "jitter_ms": 4.3,
+      "fps": 33.61
     },
     {
       "patient_id": "PT-SIM-004",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 14.48,
-      "p95_latency_ms": 16.67,
-      "jitter_ms": 3.39,
-      "fps": 32.71
+      "mean_latency_ms": 14.67,
+      "p95_latency_ms": 20.04,
+      "jitter_ms": 4.31,
+      "fps": 33.6
     },
     {
       "patient_id": "PT-SIM-005",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 14.47,
-      "p95_latency_ms": 16.66,
-      "jitter_ms": 3.39,
-      "fps": 32.71
+      "mean_latency_ms": 14.67,
+      "p95_latency_ms": 20.05,
+      "jitter_ms": 4.3,
+      "fps": 33.59
     },
     {
       "patient_id": "PT-SIM-006",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 15.54,
-      "p95_latency_ms": 16.92,
-      "jitter_ms": 1.73,
-      "fps": 32.7
+      "mean_latency_ms": 14.66,
+      "p95_latency_ms": 20.05,
+      "jitter_ms": 4.3,
+      "fps": 33.58
     },
     {
       "patient_id": "PT-SIM-007",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 15.01,
-      "p95_latency_ms": 16.95,
-      "jitter_ms": 3.23,
-      "fps": 32.21
+      "mean_latency_ms": 14.64,
+      "p95_latency_ms": 20.04,
+      "jitter_ms": 4.34,
+      "fps": 33.57
     },
     {
       "patient_id": "PT-SIM-008",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 15.0,
-      "p95_latency_ms": 16.94,
-      "jitter_ms": 3.23,
-      "fps": 32.2
+      "mean_latency_ms": 14.62,
+      "p95_latency_ms": 20.04,
+      "jitter_ms": 4.34,
+      "fps": 33.56
     },
     {
       "patient_id": "PT-SIM-009",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 14.99,
-      "p95_latency_ms": 16.93,
-      "jitter_ms": 3.23,
-      "fps": 32.2
+      "mean_latency_ms": 14.61,
+      "p95_latency_ms": 20.03,
+      "jitter_ms": 4.35,
+      "fps": 33.55
     },
     {
       "patient_id": "PT-SIM-010",
       "frames_sent": 30,
       "frames_received": 30,
       "packet_loss_rate": 0.0,
-      "mean_latency_ms": 14.97,
-      "p95_latency_ms": 16.86,
-      "jitter_ms": 3.23,
-      "fps": 32.19
+      "mean_latency_ms": 14.6,
+      "p95_latency_ms": 20.03,
+      "jitter_ms": 4.35,
+      "fps": 33.54
     }
   ],
   "disclaimer": "Research prototype \u2014 not intended for medical diagnosis."

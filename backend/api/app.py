@@ -21,6 +21,7 @@ from backend.api.routers import (
     alerts_router,
     reports_router,
     benchmark_router,
+    audit_router,
 )
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(alerts_router, prefix=api_v1_prefix)
     app.include_router(reports_router, prefix=api_v1_prefix)
     app.include_router(benchmark_router, prefix=api_v1_prefix)
+    app.include_router(audit_router, prefix=api_v1_prefix)
 
     # Mount live streaming WebSocket router
     app.include_router(websocket_router)
@@ -109,6 +111,12 @@ def create_app() -> FastAPI:
                 "multimodal_demo_frame": "/api/v1/multimodal/demo-frame",
                 "playback": "/api/v1/playback/frame",
                 "websocket_ppg": "/ws/v1/ppg",
+                "alerts": "/api/v1/alerts",
+                "reports": "/api/v1/reports",
+                "benchmark": "/api/v1/benchmark/run",
+                "audit_integrity": "/api/v1/audit/integrity/{session_id}",
+                "audit_diagnostics": "/api/v1/audit/system-diagnostics",
+                "audit_compliance": "/api/v1/audit/compliance",
             },
             "disclaimer": "Research prototype — not intended for medical diagnosis.",
         })
