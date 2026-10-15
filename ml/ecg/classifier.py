@@ -16,7 +16,7 @@ import joblib
 import sys
 from unittest.mock import MagicMock
 
-# Shim for Windows Smart App Control blocking unsigned pyd modules in scikit-learn
+# Shim for Windows Smart App Control / WDAC blocking unsigned pyd modules in scikit-learn
 try:
     import sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode
 except Exception:
@@ -25,7 +25,10 @@ except Exception:
         MagicMock(),
     )
 
-from sklearn.ensemble import RandomForestClassifier
+try:
+    from sklearn.ensemble import RandomForestClassifier
+except Exception:
+    RandomForestClassifier = None
 
 from ml.ecg.processor import ECGProcessor
 
@@ -221,6 +224,9 @@ class ECGClassifier:
         """
         unique_labels = sorted(list(set(y)))
         self.classes = unique_labels
+
+        if RandomForestClassifier is None:
+            raise RuntimeError("scikit-learn RandomForestClassifier is not available on this platform.")
 
         clf = RandomForestClassifier(
             n_estimators=100,
